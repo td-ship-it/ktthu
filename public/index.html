@@ -1306,11 +1306,11 @@ const V2_FORM = [
     { title: '1. Phẩm chất chính trị, phẩm chất đạo đức và ý thức kỷ luật, kỷ cương trong thực thi nhiệm vụ (10 điểm)',
       crits: [
         { no: '1.1', text: 'Chấp hành đường lối, chủ trương của Đảng, chính sách, pháp luật của Nhà nước và quy định của ĐHYD/ĐV/TC (2 điểm)',
-          score: { key: 'i11', label: 'Điểm 1.1 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+          score: { key: 'i11', label: 'Điểm 1.1 (tối đa 2 điểm)', values: [0, 2] } },
         { no: '1.2', text: 'Có lập trường chính trị vững vàng; giữ gìn phẩm chất đạo đức, lối sống lành mạnh; không có biểu hiện suy thoái về tư tưởng chính trị, đạo đức, lối sống (2 điểm)',
-          score: { key: 'i12', label: 'Điểm 1.2 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+          score: { key: 'i12', label: 'Điểm 1.2 (tối đa 2 điểm)', values: [0, 2] } },
         { no: '1.3', text: 'Thực hiện đúng chuẩn mực đạo đức nghề nghiệp; trung thực, khách quan, công bằng trong thực hiện nhiệm vụ (2 điểm)',
-          score: { key: 'i13', label: 'Điểm 1.3 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+          score: { key: 'i13', label: 'Điểm 1.3 (tối đa 2 điểm)', values: [0, 2] } },
         { no: '1.4', text: 'Chấp hành sự phân công; thực hiện kỷ luật, kỷ cương; tuân thủ nội quy, quy chế của ĐHYD/ĐV/TC (2 điểm)',
           items: [
             '- Báo cáo sai lệch/thiếu gây ảnh hưởng công tác quản lý/chuyên môn: trừ 0,5 điểm/lần được lãnh đạo ĐHYD/ĐV/TC nhắc nhở.',
@@ -1320,49 +1320,49 @@ const V2_FORM = [
           ], plain: true,
           score: { key: 'i14', label: 'Điểm 1.4 (tối đa 2 điểm)', values: steps(2, 0.5) } },
         { no: '1.5', text: 'Có tinh thần đoàn kết, hợp tác; giữ gìn uy tín, hình ảnh của ĐHYD/ĐV/TC (2 điểm)',
-          score: { key: 'i15', label: 'Điểm 1.5 (tối đa 2 điểm)', values: steps(2, 0.5) } }
+          score: { key: 'i15', label: 'Điểm 1.5 (tối đa 2 điểm)', values: [0, 2] } }
       ] },
 
     { title: '2. Năng lực chuyên môn, nghiệp vụ theo yêu cầu của vị trí việc làm; tinh thần trách nhiệm; thái độ phục vụ; khả năng phối hợp trong công tác (10 điểm)',
       crits: [
         { no: '2.1', text: 'Năng lực chuyên môn, nghiệp vụ theo yêu cầu của vị trí việc làm (3 điểm)', subs: [
           { text: 'Có kiến thức chuyên sâu, toàn diện về lĩnh vực công tác được phân công; hiểu biết đầy đủ về quy định pháp luật, quy trình nghiệp vụ có liên quan đến vị trí việc làm. (1 điểm)',
-            score: { key: 'i211', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+            score: { key: 'i211', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } },
           { text: 'Chủ động học tập; tham gia đào tạo, bồi dưỡng kiến thức, nâng cao kỹ năng năng lực công tác đáp ứng yêu cầu của vị trí việc làm (1 điểm)',
-            score: { key: 'i212', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+            score: { key: 'i212', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } },
           { text: 'Có kỹ năng xử lý công việc độc lập, làm việc nhóm hiệu quả; sử dụng thành thạo công nghệ thông tin và các công cụ hỗ trợ phục vụ chuyên môn, nghiệp vụ (1 điểm)',
-            score: { key: 'i213', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+            score: { key: 'i213', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } }
         ] },
         { no: '2.2', text: 'Khả năng đáp ứng yêu cầu thực thi nhiệm vụ được giao thường xuyên, đột xuất (3 điểm)', subs: [
           { text: 'Nhiệm vụ thường xuyên: Có khả năng vận dụng thành thạo kiến thức chuyên môn, nghiệp vụ để xử lý công việc chuyên môn theo kế hoạch định kỳ; duy trì ổn định chất lượng chuyên môn. (2 điểm)',
-            score: { key: 'i221', label: 'Điểm (tối đa 2 điểm)', values: steps(2, 0.5) } },
+            score: { key: 'i221', label: 'Điểm (tối đa 2 điểm)', values: [0, 2] } },
           { text: 'Nhiệm vụ đột xuất: Chủ động đề xuất giải pháp, thực hiện hiệu quả các công việc phát sinh có tính chất chuyên môn cao; có khả năng phản ứng nhanh, chính xác với yêu cầu mới. (1 điểm)',
-            score: { key: 'i222', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+            score: { key: 'i222', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } }
         ] },
         { no: '2.3', text: 'Tinh thần trách nhiệm trong thực hiện nhiệm vụ (2 điểm)', subs: [
           { text: 'Có tinh thần trách nhiệm trong việc nghiên cứu, đề xuất, tham mưu nội dung chuyên môn; chủ động tiếp cận thông tin, kịp thời điều chỉnh cách làm để phù hợp với yêu cầu mới. (1 điểm)',
-            score: { key: 'i231', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+            score: { key: 'i231', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } },
           { text: 'Tích cực cập nhật, ứng dụng kiến thức, công nghệ mới trong công việc chuyên môn; có tinh thần cầu thị, phối hợp tốt trong các hoạt động liên quan đến chuyên môn. (1 điểm)',
-            score: { key: 'i232', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+            score: { key: 'i232', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } }
         ] },
         { no: '2.4', text: 'Thái độ phục vụ người học, đồng nghiệp và các tổ chức, cá nhân có liên quan; khả năng phối hợp trong công tác (2 điểm)', subs: [
           { text: 'Có thái độ giao tiếp, hành vi chuẩn mực với người học, đồng nghiệp; đáp ứng quy định về văn hóa ứng xử của ĐHYD, ĐV/TC (1 điểm)',
             note: 'Trường hợp có vi phạm được phản ảnh và ghi nhận tại biên bản họp của ĐHYD/đơn vị/tổ chức: 0 điểm',
-            score: { key: 'i241', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+            score: { key: 'i241', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } },
           { text: 'Phối hợp trong thực hiện nhiệm vụ; không đùn đẩy trách nhiệm, làm việc cầm chừng, qua loa, đại khái, kém hiệu quả (1 điểm)',
             note: 'Trường hợp cá nhân được lãnh đạo ĐHYD/ĐV/TC nhắc nhở công khai trước tập thể ĐHYD/đơn vị/tổ chức: 0 điểm',
-            score: { key: 'i242', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+            score: { key: 'i242', label: 'Điểm (tối đa 1 điểm)', values: [0, 1] } }
         ] }
       ] },
 
     { title: '3. Năng lực đổi mới, sáng tạo; dám nghĩ, dám làm, dám chịu trách nhiệm vì lợi ích chung trong thực hiện nhiệm vụ (10 điểm)',
       crits: [
         { no: '3.1', text: 'Có sản phẩm, giải pháp đột phá, sáng tạo đem lại giá trị, hiệu quả thiết thực, tác động tích cực đến kết quả thực hiện nhiệm vụ của tổ chức, đơn vị (4 điểm)',
-          score: { key: 'i31', label: 'Điểm 3.1 (tối đa 4 điểm)', values: steps(4, 0.5) } },
+          score: { key: 'i31', label: 'Điểm 3.1 (tối đa 4 điểm)', values: [0, 4] } },
         { no: '3.2', text: 'Có tinh thần chịu trách nhiệm trước kết quả công việc; chủ động nhận trách nhiệm khi có sai sót và có biện pháp khắc phục rõ ràng, cụ thể (3 điểm)',
-          score: { key: 'i32', label: 'Điểm 3.2 (tối đa 3 điểm)', values: steps(3, 0.5) } },
+          score: { key: 'i32', label: 'Điểm 3.2 (tối đa 3 điểm)', values: [0, 3] } },
         { no: '3.3', text: 'Chủ động, trách nhiệm với nhiệm vụ được giao; dám nghĩ, dám làm, dám chịu trách nhiệm, dám đổi mới, sáng tạo, linh hoạt trong thực hiện nhiệm vụ (đối với viên chức quản lý) (3 điểm)',
-          score: { key: 'i33', label: 'Điểm 3.3 (tối đa 3 điểm)', values: steps(3, 0.5) } }
+          score: { key: 'i33', label: 'Điểm 3.3 (tối đa 3 điểm)', values: [0, 3] } }
       ] }
   ] },
 

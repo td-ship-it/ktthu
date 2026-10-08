@@ -210,7 +210,10 @@ function verifyOtp_(args, _user, req) {
   if (!/^[a-f0-9]{32}$/.test(otpId)) throw appError_("Phiên xác thực không hợp lệ, vui lòng đăng nhập lại", "OTP_EXPIRED");
   if (!/^\d{6}$/.test(code)) throw appError_("Mã OTP gồm 6 chữ số", "BAD_INPUT");
 
-  return withLock_(() => {
+  // Không dùng khóa toàn hệ thống (LockService) ở bước này: khóa đó dùng chung với lưu phiếu,
+  // giờ cao điểm người nhập OTP phải xếp hàng chờ. Mã chỉ dùng 1 lần (xóa ngay khi đúng),
+  // số lần sai giới hạn theo mã + theo IP nên vẫn an toàn.
+  {
     const rec = getOtp_(otpId);
     if (!rec) throw appError_("Mã OTP đã hết hạn, vui lòng đăng nhập lại", "OTP_EXPIRED");
     const ipNote = rec.ip && ctx.ip && rec.ip !== ctx.ip ? "IP khác lúc gửi mã (" + rec.ip + ")" : "";
@@ -238,7 +241,7 @@ function verifyOtp_(args, _user, req) {
     delOtp_(otpId);
     logLogin_(ctx, rec.user, "✅ Thành công (OTP)", ipNote, otpId);
     return { token: signToken_(rec.user, true), user: rec.user };
-  });
+  }
 }
 
 function resendOtp_(args, _user, req) {
@@ -554,7 +557,8 @@ function ensureLoginHeader_(sheet) {
 // PHIẾU MỚI (mẫu chính thức) — áp dụng từ tháng FORM_V2_FROM
 //   "Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ
 //    khối hành chính, hỗ trợ, phục vụ"
-//   I.  Tiêu chí chung 30đ — chấm đúng chỗ phiếu ghi điểm:
+//   I.  Tiêu chí chung 30đ — chấm đúng chỗ phiếu ghi điểm; chỉ chọn 0 hoặc trọn điểm,
+//       riêng 1.4 chấm bước 0,5 (có trừ điểm theo lần vi phạm):
 //       1.1–1.5 mỗi tiêu chí 2đ | các ý của 2.1–2.4 (1đ, riêng ý "thường xuyên" 2đ)
 //       | 3.1 (4đ), 3.2 (3đ), 3.3 (3đ)
 //   II. Kết quả thực hiện nhiệm vụ 70đ
@@ -567,23 +571,23 @@ const TEXT_MAX_WORDS   = 100;
 const BONUS_MAX        = 7;
 
 const V2_RULES = {
-  i11:  { label: "1.1",   allowed: range_(0, 2, 0.5) },
-  i12:  { label: "1.2",   allowed: range_(0, 2, 0.5) },
-  i13:  { label: "1.3",   allowed: range_(0, 2, 0.5) },
+  i11:  { label: "1.1",   allowed: [0, 2] },
+  i12:  { label: "1.2",   allowed: [0, 2] },
+  i13:  { label: "1.3",   allowed: [0, 2] },
   i14:  { label: "1.4",   allowed: range_(0, 2, 0.5) },
-  i15:  { label: "1.5",   allowed: range_(0, 2, 0.5) },
-  i211: { label: "2.1.1", allowed: range_(0, 1, 0.5) },
-  i212: { label: "2.1.2", allowed: range_(0, 1, 0.5) },
-  i213: { label: "2.1.3", allowed: range_(0, 1, 0.5) },
-  i221: { label: "2.2.1", allowed: range_(0, 2, 0.5) },
-  i222: { label: "2.2.2", allowed: range_(0, 1, 0.5) },
-  i231: { label: "2.3.1", allowed: range_(0, 1, 0.5) },
-  i232: { label: "2.3.2", allowed: range_(0, 1, 0.5) },
-  i241: { label: "2.4.1", allowed: range_(0, 1, 0.5) },
-  i242: { label: "2.4.2", allowed: range_(0, 1, 0.5) },
-  i31:  { label: "3.1",   allowed: range_(0, 4, 0.5) },
-  i32:  { label: "3.2",   allowed: range_(0, 3, 0.5) },
-  i33:  { label: "3.3",   allowed: range_(0, 3, 0.5) },
+  i15:  { label: "1.5",   allowed: [0, 2] },
+  i211: { label: "2.1.1", allowed: [0, 1] },
+  i212: { label: "2.1.2", allowed: [0, 1] },
+  i213: { label: "2.1.3", allowed: [0, 1] },
+  i221: { label: "2.2.1", allowed: [0, 2] },
+  i222: { label: "2.2.2", allowed: [0, 1] },
+  i231: { label: "2.3.1", allowed: [0, 1] },
+  i232: { label: "2.3.2", allowed: [0, 1] },
+  i241: { label: "2.4.1", allowed: [0, 1] },
+  i242: { label: "2.4.2", allowed: [0, 1] },
+  i31:  { label: "3.1",   allowed: [0, 4] },
+  i32:  { label: "3.2",   allowed: [0, 3] },
+  i33:  { label: "3.3",   allowed: [0, 3] },
   ii1:  { label: "II.1",  allowed: [0, 14, 15, 16, 17, 18, 18.5, 19, 19.5, 20] },
   ii2:  { label: "II.2",  allowed: [0, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
   ii3:  { label: "II.3",  allowed: [0, 22, 23, 24, 25, 26, 27, 28, 29, 30] }

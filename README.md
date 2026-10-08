@@ -88,10 +88,10 @@ npx wrangler dev
 Từ **tháng đánh giá 10/2026** app dùng phiếu *"Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ khối hành chính, hỗ trợ, phục vụ"* (mẫu chính thức). Các tháng trước vẫn dùng phiếu cũ (ai nộp bù tháng 9 vẫn ra phiếu cũ). Mốc này nằm ở `FORM_V2_FROM` trong `apps-script/Code.gs` **và** `public/index.html` — đổi thì đổi cả hai.
 
 - **Nội dung tiêu chí ghi nguyên văn** theo mẫu chính thức.
-- **Chấm đúng chỗ phiếu ghi điểm** (bước 0,5):
-  - 1.1 – 1.5: mỗi tiêu chí 0–2 điểm (khoản trừ của 1.4 trừ vào 2 điểm của 1.4)
-  - 2.1: 3 ý × 1đ · 2.2: ý "thường xuyên" 2đ + ý "đột xuất" 1đ · 2.3: 2 ý × 1đ · 2.4: 2 ý × 1đ
-  - 3.1 (0–4), 3.2 (0–3), 3.3 (0–3) — ai cũng tự chấm 3.3
+- **Chấm đúng chỗ phiếu ghi điểm, chỉ chọn 0 hoặc trọn điểm** — riêng **1.4** chấm bước 0,5 (0 → 2) vì có trừ điểm theo lần vi phạm:
+  - 1.1, 1.2, 1.3, 1.5: 0 hoặc 2 điểm
+  - 2.1: 3 ý × (0/1) · 2.2: ý "thường xuyên" 0/2 + ý "đột xuất" 0/1 · 2.3: 2 ý × (0/1) · 2.4: 2 ý × (0/1)
+  - 3.1 (0/4), 3.2 (0/3), 3.3 (0/3) — ai cũng tự chấm 3.3
   - Phần II giữ nguyên, mỗi mức có ghi kèm % tương ứng
 - **Điểm thưởng:** tối đa đủ 7 điểm (Phòng TCCB chốt không áp giới hạn 10% KPI; dòng ghi chú trên phiếu vẫn giữ nguyên văn). Đề xuất > 0 thì bắt buộc mô tả cách làm hay & minh chứng. Tổng sau cộng tối đa 100.
 - **Xếp loại:** A+ ≥ 90 · A 70–<90 · B 50–<70 · C < 50, **kèm điều kiện** suy từ điểm phần II:
