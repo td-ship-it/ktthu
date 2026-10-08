@@ -10,3 +10,7 @@ keep_vars = true
 directory = "./public"
 binding = "ASSETS"
 run_worker_first = ["/api"]
+
+# Giữ Apps Script luôn "ấm": cứ 5 phút gọi nhẹ 1 lần, 7h00–18h59 giờ Việt Nam (0h–11h UTC)
+[triggers]
+crons = ["*/5 0-11 * * *"]

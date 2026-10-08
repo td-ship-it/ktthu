@@ -83,25 +83,36 @@ npx wrangler dev
 
 ---
 
-## Phiếu đánh giá mới (từ tháng 10/2026)
+## Phiếu đánh giá mới (từ tháng 10/2026) — mẫu chính thức
 
-Từ **tháng đánh giá 10/2026** app dùng phiếu *"Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ nhóm VTVL hỗ trợ, phục vụ, nhóm dùng chung"*. Các tháng trước vẫn dùng phiếu cũ (ai nộp bù tháng 9 vẫn ra phiếu cũ). Mốc này nằm ở `FORM_V2_FROM` trong `apps-script/Code.gs` **và** `public/index.html` — đổi thì đổi cả hai.
+Từ **tháng đánh giá 10/2026** app dùng phiếu *"Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ khối hành chính, hỗ trợ, phục vụ"* (mẫu chính thức). Các tháng trước vẫn dùng phiếu cũ (ai nộp bù tháng 9 vẫn ra phiếu cũ). Mốc này nằm ở `FORM_V2_FROM` trong `apps-script/Code.gs` **và** `public/index.html` — đổi thì đổi cả hai.
 
-- **Nội dung tiêu chí ghi nguyên văn** theo phiếu của Phòng TCCB.
-- **Chấm điểm:** I.1 một ô 0–10; 2.1 (0–3), 2.2 (0–3), 2.3 (0–2), 2.4 (0–2), 3.1 (0–4), 3.2 (0–3), 3.3 (0–3), bước 0,5 — ai cũng tự chấm 3.3. Phần II giữ như cũ, mỗi mức có ghi kèm % tương ứng.
-- **Điểm thưởng:** 0–7 điểm (bước 0,5). Đề xuất > 0 thì bắt buộc mô tả cách làm hay & minh chứng. Tổng sau cộng thưởng tối đa 100.
+- **Nội dung tiêu chí ghi nguyên văn** theo mẫu chính thức.
+- **Chấm đúng chỗ phiếu ghi điểm** (bước 0,5):
+  - 1.1 – 1.5: mỗi tiêu chí 0–2 điểm (khoản trừ của 1.4 trừ vào 2 điểm của 1.4)
+  - 2.1: 3 ý × 1đ · 2.2: ý "thường xuyên" 2đ + ý "đột xuất" 1đ · 2.3: 2 ý × 1đ · 2.4: 2 ý × 1đ
+  - 3.1 (0–4), 3.2 (0–3), 3.3 (0–3) — ai cũng tự chấm 3.3
+  - Phần II giữ nguyên, mỗi mức có ghi kèm % tương ứng
+- **Điểm thưởng:** tối đa đủ 7 điểm (Phòng TCCB chốt không áp giới hạn 10% KPI; dòng ghi chú trên phiếu vẫn giữ nguyên văn). Đề xuất > 0 thì bắt buộc mô tả cách làm hay & minh chứng. Tổng sau cộng tối đa 100.
 - **Xếp loại:** A+ ≥ 90 · A 70–<90 · B 50–<70 · C < 50, **kèm điều kiện** suy từ điểm phần II:
 
   | Mức | Điều kiện | App kiểm tra |
   |---|---|---|
-  | A+ | 100% đúng hạn, bảo đảm chất lượng, ≥ 30% nhiệm vụ vượt mức | II.1 ≥ 18, II.2 ≥ 16, II.3 ≥ 26, tỷ lệ vượt mức ≥ 30% (+ căn cứ bắt buộc) |
+  | A+ | 100% đúng hạn, bảo đảm chất lượng | II.1 ≥ 18, II.2 ≥ 16, II.3 ≥ 26 + **bắt buộc ghi căn cứ xác nhận vượt mức** |
   | A | 100% đúng hạn, bảo đảm chất lượng | II.1 ≥ 18, II.2 ≥ 16, II.3 ≥ 26 |
   | B | hoàn thành 100%, trễ tiến độ ≤ 20% | II.1 ≥ 18, II.2 ≥ 12 |
 
   Không đủ điều kiện thì hạ xuống mức thấp hơn, app ghi rõ lý do (cột *Ghi chú xếp loại*).
 - **Ô ghi chú** (mô tả thưởng, căn cứ vượt mức) tối đa **100 từ**, có bộ đếm.
 - **Trưởng đơn vị** nhập *Thưởng công nhận* (0 → mức đề xuất; để trống = công nhận đúng đề xuất); Điểm TĐV và xếp loại tự tính lại, vẫn sửa tay được.
-- **Dữ liệu** lưu ở sheet mới `DuLieuDanhGia_V2` (tự tạo khi có phiếu đầu tiên); sheet `DuLieuDanhGia` cũ giữ nguyên. Lịch sử cá nhân hiện cả hai; báo cáo/xuất Excel/CSV tháng nào theo mẫu tháng đó.
+- **Dữ liệu** lưu ở sheet `DuLieuDanhGia_KPI` (tự tạo khi có phiếu đầu tiên); sheet `DuLieuDanhGia` cũ giữ nguyên. Lịch sử cá nhân hiện cả hai; báo cáo/xuất Excel/CSV tháng nào theo mẫu tháng đó. (Sheet `DuLieuDanhGia_V2` nếu có là dữ liệu thử của bản nháp — xóa được.)
+
+## Tốc độ
+
+- **Đọc ít dữ liệu:** backend dùng *TextFinder* của Sheets để tìm đúng dòng cần (theo MSNV, theo tháng) thay vì đọc cả sheet — đăng nhập, kiểm tra đã nộp, lịch sử, bảng Trưởng đơn vị, dashboard HR đều chỉ đọc phần liên quan. Lưu bảng chấm ghi một lần cho cả nhóm dòng.
+- **Ít lần gọi máy chủ:** sau đăng nhập trang tải trước lịch sử cá nhân → chọn tháng hiện kết quả ngay; Trưởng đơn vị chọn tháng là dữ liệu đơn vị được tải trước, bảng chấm và thống kê dùng chung.
+- **Giữ Apps Script "ấm":** `wrangler.toml` có `[triggers] crons` — Cloudflare gọi nhẹ Apps Script 5 phút/lần trong 7h–19h (giờ VN) để tránh phải chờ Google khởi động lại. Có thể chỉnh giờ trong `crons` (giờ UTC).
+- Phần chậm còn lại chủ yếu là thời gian Google chạy Apps Script (~1–2 giây/lần) và gửi email OTP (~1–2 giây) — không rút ngắn thêm được bằng code.
 
 ## Đăng nhập 2 lớp (OTP qua email) cho Trưởng đơn vị & HR
 
