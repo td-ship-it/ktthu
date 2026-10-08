@@ -83,6 +83,26 @@ npx wrangler dev
 
 ---
 
+## Phiếu đánh giá mới (từ tháng 10/2026)
+
+Từ **tháng đánh giá 10/2026** app dùng phiếu *"Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ nhóm VTVL hỗ trợ, phục vụ, nhóm dùng chung"*. Các tháng trước vẫn dùng phiếu cũ (ai nộp bù tháng 9 vẫn ra phiếu cũ). Mốc này nằm ở `FORM_V2_FROM` trong `apps-script/Code.gs` **và** `public/index.html` — đổi thì đổi cả hai.
+
+- **Nội dung tiêu chí ghi nguyên văn** theo phiếu của Phòng TCCB.
+- **Chấm điểm:** I.1 một ô 0–10; 2.1 (0–3), 2.2 (0–3), 2.3 (0–2), 2.4 (0–2), 3.1 (0–4), 3.2 (0–3), 3.3 (0–3), bước 0,5 — ai cũng tự chấm 3.3. Phần II giữ như cũ, mỗi mức có ghi kèm % tương ứng.
+- **Điểm thưởng:** 0–7 điểm (bước 0,5). Đề xuất > 0 thì bắt buộc mô tả cách làm hay & minh chứng. Tổng sau cộng thưởng tối đa 100.
+- **Xếp loại:** A+ ≥ 90 · A 70–<90 · B 50–<70 · C < 50, **kèm điều kiện** suy từ điểm phần II:
+
+  | Mức | Điều kiện | App kiểm tra |
+  |---|---|---|
+  | A+ | 100% đúng hạn, bảo đảm chất lượng, ≥ 30% nhiệm vụ vượt mức | II.1 ≥ 18, II.2 ≥ 16, II.3 ≥ 26, tỷ lệ vượt mức ≥ 30% (+ căn cứ bắt buộc) |
+  | A | 100% đúng hạn, bảo đảm chất lượng | II.1 ≥ 18, II.2 ≥ 16, II.3 ≥ 26 |
+  | B | hoàn thành 100%, trễ tiến độ ≤ 20% | II.1 ≥ 18, II.2 ≥ 12 |
+
+  Không đủ điều kiện thì hạ xuống mức thấp hơn, app ghi rõ lý do (cột *Ghi chú xếp loại*).
+- **Ô ghi chú** (mô tả thưởng, căn cứ vượt mức) tối đa **100 từ**, có bộ đếm.
+- **Trưởng đơn vị** nhập *Thưởng công nhận* (0 → mức đề xuất; để trống = công nhận đúng đề xuất); Điểm TĐV và xếp loại tự tính lại, vẫn sửa tay được.
+- **Dữ liệu** lưu ở sheet mới `DuLieuDanhGia_V2` (tự tạo khi có phiếu đầu tiên); sheet `DuLieuDanhGia` cũ giữ nguyên. Lịch sử cá nhân hiện cả hai; báo cáo/xuất Excel/CSV tháng nào theo mẫu tháng đó.
+
 ## Đăng nhập 2 lớp (OTP qua email) cho Trưởng đơn vị & HR
 
 Người có vai trò **Trưởng đơn vị** hoặc **HR** (ở bất kỳ đơn vị nào) sau khi nhập mã số/CCCD sẽ nhận **mã OTP 6 số qua email**. Nhập đúng mã mới vào được hệ thống. VC-NLĐ thường vẫn chỉ cần mã số.

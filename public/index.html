@@ -92,7 +92,35 @@
     .menu-toggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; color: var(--gray-600); font-size: 20px; line-height: 1; }
     .menu-toggle:hover { background: var(--gray-100); }
     .page-content { flex: 1; padding: 24px; max-width: 1200px; width: 100%; }
-    #form-page { flex: 1; padding: 20px 24px; max-width: var(--form-width); width: 100%; }
+    #form-page, #form-page-v2 { flex: 1; padding: 20px 24px; max-width: var(--form-width); width: 100%; }
+    /* Phiếu mới */
+    .part-header { background: var(--navy); color: white; border-radius: var(--radius-sm); padding: 12px 16px; margin: 30px 0 6px; font-size: .9rem; font-weight: 800; line-height: 1.45; }
+    .group-header { background: #eff6ff; border-left: 5px solid var(--primary); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 11px 14px; margin: 20px 0 12px; font-size: .86rem; font-weight: 700; color: #1e3a8a; line-height: 1.5; }
+    .crit { margin: 0 0 14px; }
+    .crit-title { font-size: 13.5px; font-weight: 600; color: var(--gray-800); line-height: 1.55; }
+    .crit-title b { color: var(--navy); }
+    .crit ul { margin: 6px 0 0 18px; padding: 0; }
+    .crit li { font-size: 13px; color: var(--gray-600); line-height: 1.55; margin-bottom: 4px; }
+    .crit li i, .crit .ital { color: #b45309; font-style: italic; display: block; }
+    .score-box { background: var(--gray-50); border: 1px dashed var(--gray-200); border-radius: var(--radius-sm); padding: 10px 12px 12px; margin: 10px 0 18px; }
+    .score-box .sb-label { font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .3px; }
+    .radio-option small { font-weight: 400; color: var(--gray-400); margin-left: 2px; }
+    .radio-option:has(input:checked) small { color: var(--primary); }
+    .wl-wrap { margin-top: 10px; text-align: left; }
+    .wl-wrap label { font-size: 13px; font-weight: 600; color: var(--danger); margin-bottom: 6px; display: block; }
+    .wl-count { font-size: 12px; color: var(--gray-400); text-align: right; margin-top: 4px; }
+    .wl-count.full { color: var(--danger); font-weight: 700; }
+    .field-error { color: var(--danger); font-size: 13px; font-weight: 600; margin-top: 6px; }
+    textarea.invalid, input.invalid { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.15) !important; }
+    .sum-table { width: 100%; max-width: 520px; margin: 0 auto 14px; border-collapse: collapse; font-size: 14px; text-align: left; }
+    .sum-table td { padding: 8px 10px; border-bottom: 1px solid var(--gray-200); }
+    .sum-table td:last-child { text-align: right; font-weight: 800; color: var(--navy); white-space: nowrap; }
+    .sum-table tr.total td { font-size: 15px; color: var(--primary); border-bottom: 2px solid var(--primary); }
+    .cap-note { display: block; font-size: 11.5px; font-weight: 500; color: var(--accent-dark); }
+    .grade-reason { max-width: 520px; margin: 0 auto 14px; font-size: 13px; background: #fffbeb; color: #92400e; border-radius: var(--radius-sm); padding: 10px 12px; text-align: left; }
+    .aplus-box { max-width: 520px; margin: 0 auto 16px; text-align: left; background: #fffbeb; border: 1.5px solid var(--accent); border-radius: var(--radius-sm); padding: 14px; }
+    .aplus-box .ap-title { font-weight: 800; color: #92400e; font-size: 13.5px; margin-bottom: 8px; }
+    .aplus-box input[type="number"] { width: 110px; text-align: center; }
     .page { display: none; }
     .page.active { display: block; animation: fadeUp .3s ease; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
@@ -106,7 +134,7 @@
     .login-logo .sub { font-size: 0.75rem; color: var(--gray-400); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
     .form-group { margin-bottom: 16px; }
     .form-group label, .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
-    input[type="password"], input[type="text"], select, textarea {
+    input[type="password"], input[type="text"], input[type="number"], select, textarea {
       width: 100%; padding: 13px 14px; border: 1.5px solid var(--gray-200);
       border-radius: var(--radius-sm); font-size: 16px; font-family: inherit;
       color: var(--gray-800); background: var(--white);
@@ -242,7 +270,7 @@
       .menu-toggle { display: flex; align-items: center; justify-content: center; }
       .topbar { padding: 0 14px; }
       .page-content { padding: 14px 12px; }
-      #form-page { padding: 14px 12px; }
+      #form-page, #form-page-v2 { padding: 14px 12px; }
       .card { padding: 22px 16px; }
       .login-card { padding: 32px 22px; }
       .dashboard-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
@@ -382,18 +410,13 @@
             <div style="font-size:14px;font-weight:700;color:var(--navy);">📋 Bảng chấm điểm VC-NLĐ</div>
             <div style="font-size:12px;color:var(--gray-400);">Đơn vị: <span id="mgr-unit-display"></span> &nbsp;|&nbsp; Tháng: <span id="mgr-month-display"></span></div>
           </div>
+          <div class="info-box hidden" id="mgr-v2-hint" style="font-size:12.5px;line-height:1.55;margin-bottom:12px;">
+            💡 <b>Phiếu mới:</b> nhập <b>Thưởng công nhận</b> (0 đến mức cá nhân đề xuất; để trống = công nhận đúng mức đề xuất).
+            Điểm TĐV và xếp loại tự tính lại theo quy định; Trưởng đơn vị vẫn sửa được nếu cần.
+          </div>
           <div class="table-wrap">
             <table class="mgr-table">
-              <thead>
-                <tr>
-                  <th style="min-width:180px;">Họ và Tên</th>
-                  <th>1.1</th><th>1.2</th><th>1.3</th><th>2.1</th><th>2.2</th><th>2.3</th><th>2.4</th><th>2.5</th>
-                  <th>3.1</th><th>3.2</th><th>3.3</th><th>4.1</th><th>4.2</th><th>4.3</th>
-                  <th>Tổng</th><th>Xếp loại</th><th>Ghi chú A+</th>
-                  <th class="th-mgr">Điểm TĐV</th><th class="th-mgr">TĐV xếp loại</th><th class="th-mgr">Ghi chú</th>
-                  <th class="th-status">Trạng thái</th>
-                </tr>
-              </thead>
+              <thead id="mgr-thead"></thead>
               <tbody id="staff-table-body"></tbody>
             </table>
           </div>
@@ -523,6 +546,59 @@
               <button type="button" id="submitAssessmentBtn" class="btn btn-primary" onclick="submitData()"
                 style="width:auto;min-width:220px;margin:0 auto;display:inline-block;">📤 Gửi đánh giá</button>
             </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ======================= PHIẾU MỚI (từ tháng 10/2026) ======================= -->
+    <div id="form-page-v2" class="hidden">
+      <div class="card">
+        <form id="evaluationFormV2" autocomplete="off" onsubmit="event.preventDefault()">
+          <div class="progress-wrap">
+            <div class="progress-steps">
+              <div class="progress-step active" id="v2ps1">I. Tiêu chí chung</div>
+              <div class="progress-step" id="v2ps2">II. Kết quả nhiệm vụ</div>
+              <div class="progress-step" id="v2ps3">III. Điểm thưởng</div>
+            </div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" id="v2-progress-fill" style="width:10%"></div></div>
+          </div>
+
+          <div style="text-align:left;margin-bottom:16px;">
+            <button type="button" class="btn btn-gray" style="width:auto;padding:8px 16px;min-height:36px;font-size:13px;" onclick="backFromFormV2()">← Quay lại</button>
+          </div>
+
+          <h2 style="text-align:center;color:var(--navy);font-size:1.02rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;line-height:1.5;">Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ nhóm VTVL hỗ trợ, phục vụ, nhóm dùng chung</h2>
+          <div style="text-align:center;font-size:12px;color:var(--gray-400);margin-bottom:20px;"><span id="v2-name-display"></span> &nbsp;|&nbsp; Tháng <span id="v2-month-display"></span></div>
+          <hr class="divider">
+
+          <div id="v2-body"></div>
+
+          <div class="form-footer">
+            <table class="sum-table">
+              <tr><td>Tổng điểm KPI (I + II), trước điểm thưởng</td><td id="v2-kpi">0</td></tr>
+              <tr><td>Điểm thưởng được cộng (tối đa 7 điểm)</td><td id="v2-bonus">0</td></tr>
+              <tr class="total"><td>TỔNG ĐIỂM (đã cộng điểm thưởng, tối đa 100)<span class="cap-note hidden" id="v2-cap-note"></span></td><td id="v2-total">0</td></tr>
+            </table>
+            <div class="live-grade" id="v2-grade">Xếp loại: Chưa xác định</div>
+            <div class="grade-reason hidden" id="v2-reason"></div>
+
+            <div class="aplus-box hidden" id="v2-aplus">
+              <div class="ap-title">⭐ Xét mức A+ (Hoàn thành xuất sắc nhiệm vụ)</div>
+              <div style="font-size:12.5px;color:var(--gray-600);margin-bottom:10px;line-height:1.5;">Mức A+ yêu cầu có ít nhất 30% nhiệm vụ hoàn thành vượt mức yêu cầu. “Vượt mức yêu cầu” phải được xác định theo tiêu chí được giao trước hoặc có căn cứ xác nhận về việc vượt yêu cầu về khối lượng, chất lượng, tiến độ và/hoặc hiệu quả; không xác định chỉ trên cơ sở nhận xét định tính.</div>
+              <label for="v2-ratio" style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">Tỷ lệ nhiệm vụ hoàn thành vượt mức yêu cầu (%):</label>
+              <input type="number" id="v2-ratio" name="tyLeVuot" min="0" max="100" step="1" inputmode="numeric" placeholder="0 – 100">
+              <div class="field-error hidden" id="v2-ratio-error">⚠️ Vui lòng nhập tỷ lệ từ 0 đến 100%</div>
+              <div class="wl-wrap hidden" id="v2-evidence-wrap">
+                <label for="v2-evidence">📝 Căn cứ xác nhận vượt mức (bắt buộc):</label>
+                <textarea id="v2-evidence" name="canCuVuot" rows="4" placeholder="Nêu rõ nhiệm vụ vượt mức về khối lượng, chất lượng, tiến độ và/hoặc hiệu quả; căn cứ xác nhận…"></textarea>
+                <div class="wl-count" id="v2-evidence-count">0 / 100 từ</div>
+                <div class="field-error hidden" id="v2-evidence-error">⚠️ Vui lòng ghi căn cứ xác nhận vượt mức!</div>
+              </div>
+            </div>
+
+            <button type="button" id="v2-submit" class="btn btn-primary" onclick="submitDataV2()"
+              style="width:auto;min-width:220px;margin:0 auto;display:inline-block;">📤 Gửi đánh giá</button>
           </div>
         </form>
       </div>
@@ -735,6 +811,7 @@ function buildNav(role) {
 
 function showPage(pageId) {
   document.getElementById('form-page').classList.add('hidden');
+  document.getElementById('form-page-v2').classList.add('hidden');
   const pc = document.getElementById('page-content');
   pc.style.display = 'block';
   pc.style.maxWidth = (pageId === 'page-mgr-table') ? '100%' : '';
@@ -749,10 +826,12 @@ function showPage(pageId) {
   if (pageId === 'page-success') loadHistory();
 }
 
-function showFormPage() {
+function showFormPage(formId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-content').style.display = 'none';
-  document.getElementById('form-page').classList.remove('hidden');
+  document.getElementById('form-page').classList.add('hidden');
+  document.getElementById('form-page-v2').classList.add('hidden');
+  document.getElementById(formId || 'form-page').classList.remove('hidden');
   document.getElementById('topbar-title').textContent = 'Phiếu tự đánh giá';
   document.getElementById('topbar-subtitle').textContent = '';
   window.scrollTo(0, 0);
@@ -1015,6 +1094,7 @@ async function onHomeMonth(month) {
 function startEvaluation() {
   const month = getMonth('mp-home');
   if (!month) return alert('Vui lòng chọn tháng và năm!');
+  if (isV2Month(month)) return startEvaluationV2(month);
   resetForm();
   document.getElementById('hid-month').value = month;
   document.getElementById('form-name-display').textContent = state.user.hoTen;
@@ -1131,7 +1211,7 @@ async function submitData() {
     return;
   }
 
-  const form = {};
+  const form = { formVersion: 1 };
   new FormData(document.getElementById('evaluationForm')).forEach((v, k) => { form[k] = v; });
 
   const btns = [document.getElementById('submitAssessmentBtn'), document.getElementById('btn-submit-violation')];
@@ -1150,6 +1230,349 @@ async function submitData() {
   } catch (e) {
     showError(e);
     btns.forEach(b => setBusy(b, false));
+  }
+}
+
+// ============================================================
+// PHIẾU MỚI (V2) — áp dụng từ tháng FORM_V2_FROM
+// Nội dung tiêu chí ghi NGUYÊN VĂN theo phiếu của Phòng TCCB.
+// ============================================================
+const FORM_V2_FROM = '10-2026';
+const TEXT_MAX_WORDS = 100;
+const BONUS_MAX = 7;
+
+function monthKeyOf(m) { const p = String(m || '').split('-').map(Number); return p[1] * 12 + p[0]; }
+function isV2Month(m) { return !!m && monthKeyOf(m) >= monthKeyOf(FORM_V2_FROM); }
+function steps(max, step) { const out = []; for (let v = 0; v <= max + 1e-9; v += step) out.push(Math.round(v * 10) / 10); return out; }
+function fmt(n) { return String(n).replace('.', ','); }
+
+const V2_KEYS = ['i1','i21','i22','i23','i24','i31','i32','i33','ii1','ii2','ii3'];
+const V2_LABEL = { i1:'I.1', i21:'2.1', i22:'2.2', i23:'2.3', i24:'2.4', i31:'3.1', i32:'3.2', i33:'3.3', ii1:'II.1', ii2:'II.2', ii3:'II.3' };
+
+const V2_FORM = [
+  { part: 'I. Tiêu chí chung (30 điểm)', groups: [
+    { title: '1. Phẩm chất chính trị, phẩm chất đạo đức và ý thức kỷ luật, kỷ cương trong thực thi nhiệm vụ (10 điểm)',
+      crits: [
+        { no: '1.1', text: 'Chấp hành đường lối, chủ trương của Đảng, chính sách, pháp luật của Nhà nước và quy định của ĐHYD/ĐV/TC' },
+        { no: '1.2', text: 'Có lập trường chính trị vững vàng; giữ gìn phẩm chất đạo đức, lối sống lành mạnh; không có biểu hiện suy thoái về tư tưởng chính trị, đạo đức, lối sống' },
+        { no: '1.3', text: 'Thực hiện đúng chuẩn mực đạo đức nghề nghiệp; trung thực, khách quan, công bằng trong thực hiện nhiệm vụ' },
+        { no: '1.4', text: 'Chấp hành sự phân công; thực hiện kỷ luật, kỷ cương; tuân thủ nội quy, quy chế của ĐHYD/ĐV/TC; đảm bảo giờ lên lớp, coi thi, chấm thi theo phân công',
+          items: [
+            '- Báo cáo sai lệch/thiếu gây ảnh hưởng công tác quản lý/chuyên môn: trừ 0,5 điểm/lần được lãnh đạo ĐHYD/ĐV/TC nhắc nhở.',
+            '- Không chấp hành sự phân công của lãnh đạo bộ môn/tổ chức/đơn vị/ĐHYD: trừ 0,5 điểm/lần khi lãnh đạo ĐHYD/ĐV/TC nhắc nhở.',
+            '- Vi phạm quy chế, quy định, nội quy; vi phạm thời gian làm việc hoặc tham dự các cuộc họp/hội nghị bắt buộc: trừ 0,5 điểm/lần.',
+            '- Nghỉ làm hoặc vắng mặt không xin phép tại các cuộc họp/hội nghị bắt buộc: trừ 01 điểm/lần'
+          ], plain: true },
+        { no: '1.5', text: 'Có tinh thần đoàn kết, hợp tác; giữ gìn uy tín, hình ảnh của ĐHYD/ĐV/TC' }
+      ],
+      score: { key: 'i1', label: 'Điểm mục 1 (tối đa 10 điểm)', values: steps(10, 0.5) } },
+
+    { title: '2. Năng lực chuyên môn, nghiệp vụ theo yêu cầu của vị trí việc làm; tinh thần trách nhiệm; thái độ phục vụ; khả năng phối hợp trong công tác (10 điểm)',
+      crits: [
+        { no: '2.1', text: 'Năng lực chuyên môn, nghiệp vụ theo yêu cầu của vị trí việc làm (3 điểm)',
+          items: [
+            'Có kiến thức chuyên sâu, toàn diện về lĩnh vực công tác được phân công; hiểu biết đầy đủ về quy định pháp luật, quy trình nghiệp vụ có liên quan đến vị trí việc làm.',
+            'Chủ động học tập; tham gia đào tạo, bồi dưỡng kiến thức, nâng cao kỹ năng năng lực công tác đáp ứng yêu cầu của vị trí việc làm',
+            'Có kỹ năng xử lý công việc độc lập, làm việc nhóm hiệu quả; sử dụng thành thạo công nghệ thông tin và các công cụ hỗ trợ phục vụ chuyên môn, nghiệp vụ'
+          ], score: { key: 'i21', label: 'Điểm 2.1 (tối đa 3 điểm)', values: steps(3, 0.5) } },
+        { no: '2.2', text: 'Khả năng đáp ứng yêu cầu thực thi nhiệm vụ được giao thường xuyên, đột xuất (3 điểm)',
+          items: [
+            'Nhiệm vụ thường xuyên: Có khả năng vận dụng thành thạo kiến thức chuyên môn, nghiệp vụ để xử lý công việc chuyên môn theo kế hoạch định kỳ; duy trì ổn định chất lượng chuyên môn.',
+            'Nhiệm vụ đột xuất: Chủ động đề xuất giải pháp, thực hiện hiệu quả các công việc phát sinh có tính chất chuyên môn cao; có khả năng phản ứng nhanh, chính xác với yêu cầu mới.'
+          ], score: { key: 'i22', label: 'Điểm 2.2 (tối đa 3 điểm)', values: steps(3, 0.5) } },
+        { no: '2.3', text: 'Tinh thần trách nhiệm trong thực hiện nhiệm vụ (2 điểm)',
+          items: [
+            'Có tinh thần trách nhiệm trong việc nghiên cứu, đề xuất, tham mưu nội dung chuyên môn; chủ động tiếp cận thông tin, kịp thời điều chỉnh cách làm để phù hợp với yêu cầu mới.',
+            'Tích cực cập nhật, ứng dụng kiến thức, công nghệ mới trong công việc chuyên môn; có tinh thần cầu thị, phối hợp tốt trong các hoạt động liên quan đến chuyên môn.'
+          ], score: { key: 'i23', label: 'Điểm 2.3 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+        { no: '2.4', text: 'Thái độ phục vụ người học, đồng nghiệp và các tổ chức, cá nhân có liên quan; khả năng phối hợp trong công tác (2 điểm)',
+          items: [
+            ['Có thái độ giao tiếp, hành vi chuẩn mực với người học, đồng nghiệp; đáp ứng quy định về văn hóa ứng xử của ĐHYD, ĐV/TC',
+             'Trường hợp có vi phạm được phản ảnh và ghi nhận tại biên bản họp của ĐHYD/đơn vị/tổ chức: 0 điểm'],
+            ['Phối hợp trong thực hiện nhiệm vụ; không đùn đẩy trách nhiệm, làm việc cầm chừng, qua loa, đại khái, kém hiệu quả',
+             'Trường hợp cá nhân được lãnh đạo ĐHYD/ĐV/TC nhắc nhở công khai trước tập thể ĐHYD/đơn vị/tổ chức: 0 điểm']
+          ], score: { key: 'i24', label: 'Điểm 2.4 (tối đa 2 điểm)', values: steps(2, 0.5) } }
+      ] },
+
+    { title: '3. Năng lực đổi mới, sáng tạo; dám nghĩ, dám làm, dám chịu trách nhiệm vì lợi ích chung trong thực hiện nhiệm vụ (10 điểm)',
+      crits: [
+        { no: '3.1', text: 'Có sản phẩm, giải pháp đột phá, sáng tạo đem lại giá trị, hiệu quả thiết thực, tác động tích cực đến kết quả thực hiện nhiệm vụ của tổ chức, đơn vị (4 điểm)',
+          score: { key: 'i31', label: 'Điểm 3.1 (tối đa 4 điểm)', values: steps(4, 0.5) } },
+        { no: '3.2', text: 'Có tinh thần chịu trách nhiệm trước kết quả công việc; chủ động nhận trách nhiệm khi có sai sót và có biện pháp khắc phục rõ ràng, cụ thể (3 điểm)',
+          score: { key: 'i32', label: 'Điểm 3.2 (tối đa 3 điểm)', values: steps(3, 0.5) } },
+        { no: '3.3', text: 'Chủ động, trách nhiệm với nhiệm vụ được giao; dám nghĩ, dám làm, dám chịu trách nhiệm, dám đổi mới, sáng tạo, linh hoạt trong thực hiện nhiệm vụ (đối với viên chức quản lý) (3 điểm)',
+          score: { key: 'i33', label: 'Điểm 3.3 (tối đa 3 điểm)', values: steps(3, 0.5) } }
+      ] }
+  ] },
+
+  { part: 'II. Tiêu chí đánh giá kết quả thực hiện nhiệm vụ được giao (70 điểm)', groups: [
+    { title: '1. Khả năng đáp ứng yêu cầu về số lượng công việc, nhiệm vụ được giao (tối đa 20 điểm)',
+      crits: [{ items: [
+        '- Dưới 80% định mức/kế hoạch: 0đ',
+        '- Đạt 80-85%: 14đ; 86-90%: 15đ; 91-95%: 16đ; 96-<100%: 17đ;',
+        '- Hoàn thành 100% số lượng công việc được giao: 18đ',
+        '- Vượt 1-5%: 18,5đ; 6-10%: 19đ; 11-15%: 19,5đ; ≥16%: 20đ'
+      ], plain: true }],
+      score: { key: 'ii1', label: 'Điểm II.1 (tối đa 20 điểm)',
+        values: [[0,'<80%'],[14,'80-85%'],[15,'86-90%'],[16,'91-95%'],[17,'96-<100%'],[18,'100%'],[18.5,'vượt 1-5%'],[19,'vượt 6-10%'],[19.5,'vượt 11-15%'],[20,'vượt ≥16%']] } },
+    { title: '2. Khả năng đáp ứng yêu cầu về tiến độ công việc, nhiệm vụ được giao (tối đa 20 điểm)',
+      crits: [{ items: [
+        '- Dưới 80%: 0đ',
+        '- Đạt 80-85%: 12đ; 86-90%: 13đ; 91-95%: 14đ; 96-<100%: 15đ;',
+        '- Hoàn thành 100% đúng tiến độ được giao: 16đ',
+        '- Vượt 1-5%: 17đ; 6-10%: 18đ; 11-15%: 19đ; ≥16%: 20đ'
+      ], plain: true }],
+      score: { key: 'ii2', label: 'Điểm II.2 (tối đa 20 điểm)',
+        values: [[0,'<80%'],[12,'80-85%'],[13,'86-90%'],[14,'91-95%'],[15,'96-<100%'],[16,'100%'],[17,'vượt 1-5%'],[18,'vượt 6-10%'],[19,'vượt 11-15%'],[20,'vượt ≥16%']] } },
+    { title: '3. Khả năng đáp ứng yêu cầu về chất lượng công việc, nhiệm vụ được giao (tối đa 30 điểm)',
+      crits: [{ items: [
+        '- Dưới 80%: 0đ',
+        '- Đạt 80-85%: 22đ; 86-90%: 23đ; 91-95%: 24đ; 96-<100%: 25đ;',
+        '- Hoàn thành 100% yêu cầu chất lượng: 26đ',
+        '- Vượt 1-5%: 27đ; 6-10%: 28đ; 11-15%: 29đ; ≥16%: 30đ'
+      ], plain: true }],
+      score: { key: 'ii3', label: 'Điểm II.3 (tối đa 30 điểm)',
+        values: [[0,'<80%'],[22,'80-85%'],[23,'86-90%'],[24,'91-95%'],[25,'96-<100%'],[26,'100%'],[27,'vượt 1-5%'],[28,'vượt 6-10%'],[29,'vượt 11-15%'],[30,'vượt ≥16%']] } }
+  ] }
+];
+
+function critHtml(c) {
+  const items = (c.items || []).map(it => Array.isArray(it)
+    ? `<li>${esc(it[0])}<i>${esc(it[1])}</i></li>`
+    : `<li${c.plain ? ' style="list-style:none;margin-left:-18px;"' : ''}>${esc(it)}</li>`).join('');
+  return `<div class="crit">
+    ${c.text ? `<div class="crit-title"><b>${esc(c.no)}</b>&nbsp; ${esc(c.text)}</div>` : ''}
+    ${items ? `<ul>${items}</ul>` : ''}
+  </div>${c.score ? scoreBoxHtml(c.score) : ''}`;
+}
+function scoreBoxHtml(sc) {
+  const opts = sc.values.map(v => {
+    const [val, note] = Array.isArray(v) ? v : [v, ''];
+    return `<label class="radio-option"><input type="radio" name="${sc.key}" value="${val}"><span>${fmt(val)}đ${note ? ` <small>${esc(note)}</small>` : ''}</span></label>`;
+  }).join('');
+  return `<div class="score-box"><div class="sb-label">✍️ ${esc(sc.label)}</div><div class="radio-group" data-key="${sc.key}">${opts}</div></div>`;
+}
+
+function buildFormV2() {
+  const body = document.getElementById('v2-body');
+  let html = V2_FORM.map(p => `<div class="part-header">${esc(p.part)}</div>` + p.groups.map(g =>
+    `<div class="group-header">${esc(g.title)}</div>${g.crits.map(critHtml).join('')}${g.score ? scoreBoxHtml(g.score) : ''}`
+  ).join('')).join('');
+
+  html += `<div class="part-header" id="v2-part3">III. Điểm thưởng (khuyến khích) - cộng thêm, không tính vào tổng 100 điểm gốc</div>
+    <div class="crit">
+      <div class="crit-title"><b>1</b>&nbsp; Có cách làm hay, phương pháp mới trong lĩnh vực được giao, được áp dụng hiệu quả và có thể nhân rộng trong bộ môn/đơn vị/ĐHYD</div>
+      <div class="ital" style="font-size:13px;margin-top:6px;line-height:1.55;">Ghi chú: Tổng điểm thưởng ≤ 10% tổng điểm KPI đạt được trong kỳ <b>(tối đa 7 điểm)</b>. Cá nhân tự đề xuất; LĐ đơn vị xem xét, xác nhận. Điểm thưởng được cộng trực tiếp vào tổng điểm; nếu tổng điểm sau khi cộng thưởng vượt quá 100 thì quy về điểm tối đa 100.</div>
+    </div>
+    <div class="score-box">
+      <div class="sb-label">✍️ Điểm thưởng đề xuất (tối đa ${BONUS_MAX} điểm)</div>
+      <div class="radio-group" data-key="thuong">${steps(BONUS_MAX, 0.5).map(v =>
+        `<label class="radio-option"><input type="radio" name="thuong" value="${v}"${v === 0 ? ' checked' : ''}><span>${fmt(v)}đ</span></label>`).join('')}</div>
+      <div class="wl-wrap hidden" id="v2-bonus-wrap">
+        <label for="v2-bonus-desc">📝 Mô tả cách làm hay, phương pháp mới và minh chứng (bắt buộc khi đề xuất điểm thưởng):</label>
+        <textarea id="v2-bonus-desc" name="moTaThuong" rows="4" placeholder="Cách làm hay / phương pháp mới là gì, áp dụng ở đâu, hiệu quả ra sao, minh chứng…"></textarea>
+        <div class="wl-count" id="v2-bonus-count">0 / 100 từ</div>
+        <div class="field-error hidden" id="v2-bonus-error">⚠️ Vui lòng mô tả cách làm hay và minh chứng!</div>
+      </div>
+    </div>`;
+  body.innerHTML = html;
+
+  const form = document.getElementById('evaluationFormV2');
+  form.addEventListener('change', e => {
+    if (e.target.type === 'radio') {
+      const g = e.target.closest('.radio-group');
+      if (g) g.classList.remove('missing');
+      calcV2();
+    }
+  });
+  bindWordLimit('v2-bonus-desc', 'v2-bonus-count', 'v2-bonus-error');
+  bindWordLimit('v2-evidence', 'v2-evidence-count', 'v2-evidence-error');
+  document.getElementById('v2-ratio').addEventListener('input', e => {
+    e.target.classList.remove('invalid');
+    document.getElementById('v2-ratio-error').classList.add('hidden');
+    calcV2();
+  });
+}
+
+// Giới hạn số từ: cắt phần vượt quá nhưng giữ nguyên định dạng phần còn lại
+function countWords(s) { const t = String(s || '').trim(); return t ? t.split(/\s+/).length : 0; }
+function bindWordLimit(taId, countId, errId) {
+  const ta = document.getElementById(taId), counter = document.getElementById(countId);
+  const update = (pasted) => {
+    let n = countWords(ta.value);
+    if (n > TEXT_MAX_WORDS) {
+      const m = ta.value.match(new RegExp('^\\s*(?:\\S+\\s+){' + (TEXT_MAX_WORDS - 1) + '}\\S+'));
+      if (m) ta.value = m[0];
+      n = TEXT_MAX_WORDS;
+      if (pasted) alert(`⚠️ Nội dung chỉ được tối đa ${TEXT_MAX_WORDS} từ. Phần vượt quá đã được cắt bớt.`);
+    }
+    counter.textContent = `${n} / ${TEXT_MAX_WORDS} từ`;
+    counter.classList.toggle('full', n >= TEXT_MAX_WORDS);
+    if (n > 0) { ta.classList.remove('invalid'); document.getElementById(errId).classList.add('hidden'); }
+  };
+  ta.addEventListener('input', e => update(e.inputType === 'insertFromPaste'));
+  ta._wlUpdate = update;
+}
+
+/** Xếp loại theo quy định mới — giống hệt gradeV2_ ở backend */
+function gradeV2(total, ii1, ii2, ii3, ratio) {
+  const scoreGrade = total >= 90 ? 'A+' : total >= 70 ? 'A' : total >= 50 ? 'B' : 'C';
+  const full = ii1 >= 18, onTime = ii2 >= 16, quality = ii3 >= 26, lateOk = ii2 >= 12;
+  const condA = full && onTime && quality, condB = full && lateOk;
+  const r = (ratio === null || ratio === undefined || ratio === '') ? NaN : Number(ratio);
+  const why = [];
+  const add = t => { if (!why.includes(t)) why.push(t); };
+  let g = scoreGrade;
+  if (g === 'A+' && condA && !(r >= 30)) { g = 'A'; add('tỷ lệ nhiệm vụ vượt mức dưới 30%'); }
+  if ((g === 'A+' || g === 'A') && !condA) {
+    g = 'B';
+    if (!full) add('chưa hoàn thành 100% số lượng');
+    if (!onTime) add('chưa đúng 100% tiến độ');
+    if (!quality) add('chưa đạt 100% yêu cầu chất lượng');
+  }
+  if (g === 'B' && !condB) {
+    g = 'C';
+    if (!full) add('chưa hoàn thành 100% số lượng');
+    if (!lateOk) add('trễ tiến độ quá 20%');
+  }
+  return { grade: g, scoreGrade, needsRatio: scoreGrade === 'A+' && condA,
+           reasons: g === scoreGrade ? [] : [`Tổng điểm đạt mức ${scoreGrade} nhưng ${why.join(', ')} → xếp loại ${g}`] };
+}
+
+function v2Val(name) {
+  const el = document.querySelector(`#evaluationFormV2 input[name="${name}"]:checked`);
+  return el ? Number(el.value) : null;
+}
+
+function calcV2() {
+  let kpi = 0;
+  V2_KEYS.forEach(k => { kpi += v2Val(k) || 0; });
+  kpi = Math.round(kpi * 10) / 10;
+  const bonus = v2Val('thuong') || 0;
+  const raw = Math.round((kpi + bonus) * 10) / 10;
+  const total = Math.min(100, raw);
+  const allFilled = V2_KEYS.every(k => v2Val(k) !== null);
+
+  document.getElementById('v2-kpi').textContent = fmt(kpi);
+  document.getElementById('v2-bonus').textContent = fmt(bonus);
+  document.getElementById('v2-total').textContent = fmt(total);
+  const cap = document.getElementById('v2-cap-note');
+  cap.textContent = raw > 100 ? `${fmt(kpi)} + ${fmt(bonus)} = ${fmt(raw)} → quy về 100` : '';
+  cap.classList.toggle('hidden', raw <= 100);
+
+  document.getElementById('v2-bonus-wrap').classList.toggle('hidden', !(bonus > 0));
+
+  const ratioEl = document.getElementById('v2-ratio');
+  const pre = gradeV2(total, v2Val('ii1') || 0, v2Val('ii2') || 0, v2Val('ii3') || 0, null);
+  const showAPlus = allFilled && pre.needsRatio;
+  document.getElementById('v2-aplus').classList.toggle('hidden', !showAPlus);
+  const ratio = showAPlus ? ratioEl.value : null;
+  document.getElementById('v2-evidence-wrap').classList.toggle('hidden', !(showAPlus && ratio !== '' && Number(ratio) >= 30));
+
+  const g = gradeV2(total, v2Val('ii1') || 0, v2Val('ii2') || 0, v2Val('ii3') || 0, ratio);
+  const pending = !allFilled ? ' (tạm tính)' : bonus > 0 ? ' (tạm tính — chờ Trưởng đơn vị xác nhận điểm thưởng)' : '';
+  let label = g.grade;
+  if (showAPlus && ratio === '') label = 'A+ hoặc A — nhập tỷ lệ vượt mức để xác định';
+  document.getElementById('v2-grade').textContent = 'Xếp loại: ' + label + pending;
+  const reason = document.getElementById('v2-reason');
+  const showReason = allFilled && g.reasons.length && !(showAPlus && ratio === '');
+  reason.textContent = showReason ? 'ℹ️ ' + g.reasons.join(' ') : '';
+  reason.classList.toggle('hidden', !showReason);
+
+  // Thanh tiến trình
+  const anyII = ['ii1','ii2','ii3'].some(k => v2Val(k) !== null);
+  const allII = ['ii1','ii2','ii3'].every(k => v2Val(k) !== null);
+  const step = allII ? 3 : anyII ? 2 : 1;
+  document.getElementById('v2-progress-fill').style.width = [15, 50, 90][step - 1] + '%';
+  ['v2ps1', 'v2ps2', 'v2ps3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active', 'done');
+    if (i + 1 < step) el.classList.add('done'); else if (i + 1 === step) el.classList.add('active');
+  });
+  return { kpi, bonus, total, g, showAPlus, allFilled };
+}
+
+function resetFormV2() {
+  const form = document.getElementById('evaluationFormV2');
+  form.reset();
+  form.querySelectorAll('.missing, .invalid').forEach(el => el.classList.remove('missing', 'invalid'));
+  form.querySelectorAll('.field-error').forEach(el => el.classList.add('hidden'));
+  ['v2-bonus-desc', 'v2-evidence'].forEach(id => { const t = document.getElementById(id); if (t._wlUpdate) t._wlUpdate(false); });
+  setBusy(document.getElementById('v2-submit'), false);
+  calcV2();
+}
+
+function startEvaluationV2(month) {
+  resetFormV2();
+  state.v2Month = month;
+  document.getElementById('v2-name-display').textContent = state.user.hoTen;
+  document.getElementById('v2-month-display').textContent = monthLabel(month);
+  showFormPage('form-page-v2');
+}
+
+function backFromFormV2() {
+  if (!confirm('Bạn có chắc muốn thoát? Dữ liệu đang nhập sẽ bị mất.')) return;
+  resetFormV2();
+  showPage('page-home');
+}
+
+function flagField(el, errId, msg) {
+  el.classList.add('invalid');
+  if (errId) document.getElementById(errId).classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => el.focus(), 300);
+  if (msg) alert('⚠️ ' + msg);
+}
+
+async function submitDataV2() {
+  for (const k of V2_KEYS) {
+    if (v2Val(k) === null) {
+      const grp = document.querySelector(`#evaluationFormV2 .radio-group[data-key="${k}"]`);
+      grp.classList.add('missing');
+      grp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return alert(`⚠️ Vui lòng chọn điểm cho mục ${V2_LABEL[k]} trước khi gửi!`);
+    }
+  }
+  const c = calcV2();
+  const desc = document.getElementById('v2-bonus-desc');
+  if (c.bonus > 0 && !desc.value.trim())
+    return flagField(desc, 'v2-bonus-error');
+  const ratioEl = document.getElementById('v2-ratio');
+  const ev = document.getElementById('v2-evidence');
+  if (c.showAPlus) {
+    const r = ratioEl.value.trim();
+    if (r === '' || isNaN(Number(r)) || Number(r) < 0 || Number(r) > 100 || !Number.isInteger(Number(r)))
+      return flagField(ratioEl, 'v2-ratio-error');
+    if (Number(r) >= 30 && !ev.value.trim()) return flagField(ev, 'v2-evidence-error');
+  }
+
+  const form = { formVersion: 2, assessmentMonth: state.v2Month };
+  V2_KEYS.forEach(k => { form[k] = v2Val(k); });
+  form.thuong = c.bonus;
+  form.moTaThuong = c.bonus > 0 ? desc.value.trim() : '';
+  form.tyLeVuot = c.showAPlus ? ratioEl.value.trim() : '';
+  form.canCuVuot = c.showAPlus && Number(ratioEl.value) >= 30 ? ev.value.trim() : '';
+
+  const msg = `Xác nhận gửi phiếu tháng ${monthLabel(state.v2Month)}?\n\nTổng điểm: ${fmt(c.total)}\nXếp loại tự đánh giá: ${c.g.grade}` +
+              (c.g.reasons.length ? `\n(${c.g.reasons[0]})` : '') + '\n\nSau khi gửi sẽ không sửa được.';
+  if (!confirm(msg)) return;
+
+  const btn = document.getElementById('v2-submit');
+  setBusy(btn, true, '⏳ Đang gửi...');
+  try {
+    const res = await api('saveData', { form });
+    document.getElementById('res-score').textContent = res.score;
+    document.getElementById('res-grade').textContent = res.grade;
+    document.getElementById('res-month').textContent = monthLabel(state.v2Month);
+    document.getElementById('success-result').classList.remove('hidden');
+    resetFormV2();
+    resetMonthPicker('mp-home');
+    setStatus(document.getElementById('status-msg'), '', '');
+    document.getElementById('btn-start').classList.add('hidden');
+    showPage('page-success');
+  } catch (e) {
+    showError(e);
+    setBusy(btn, false);
   }
 }
 
@@ -1188,36 +1611,95 @@ function goToManagerView() {
   loadManagerTable();
 }
 
+const MGR_HEAD_V1 = `<tr>
+  <th style="min-width:180px;">Họ và Tên</th>
+  <th>1.1</th><th>1.2</th><th>1.3</th><th>2.1</th><th>2.2</th><th>2.3</th><th>2.4</th><th>2.5</th>
+  <th>3.1</th><th>3.2</th><th>3.3</th><th>4.1</th><th>4.2</th><th>4.3</th>
+  <th>Tổng</th><th>Xếp loại</th><th>Ghi chú A+</th>
+  <th class="th-mgr">Điểm TĐV</th><th class="th-mgr">TĐV xếp loại</th><th class="th-mgr">Ghi chú</th>
+  <th class="th-status">Trạng thái</th></tr>`;
+const MGR_HEAD_V2 = `<tr>
+  <th style="min-width:180px;">Họ và Tên</th>
+  ${V2_KEYS.map(k => `<th>${V2_LABEL[k]}</th>`).join('')}
+  <th>Tổng KPI</th><th>Thưởng đề xuất</th><th>Mô tả cách làm hay</th><th>Tổng</th><th>Tự xếp loại</th>
+  <th>Vượt mức (%)</th><th>Căn cứ vượt mức</th><th>Ghi chú xếp loại</th>
+  <th class="th-mgr">Thưởng công nhận</th><th class="th-mgr">Điểm TĐV</th><th class="th-mgr">TĐV xếp loại</th><th class="th-mgr">Ghi chú</th>
+  <th class="th-status">Trạng thái</th></tr>`;
+
 async function loadManagerTable() {
   const tbody = document.getElementById('staff-table-body');
+  const v2 = isV2Month(state.mgrMonth);
+  document.getElementById('mgr-thead').innerHTML = v2 ? MGR_HEAD_V2 : MGR_HEAD_V1;
+  document.getElementById('mgr-v2-hint').classList.toggle('hidden', !v2);
+  const span = v2 ? 26 : 22;
   const n = nextSeq('mgrTable');
-  tbody.innerHTML = '<tr><td colspan="22" style="text-align:center;padding:24px;color:var(--gray-400);">⏳ Đang tải...</td></tr>';
+  tbody.innerHTML = `<tr><td colspan="${span}" style="text-align:center;padding:24px;color:var(--gray-400);">⏳ Đang tải...</td></tr>`;
   try {
     const data = await api('getStaffData', { month: state.mgrMonth });
     if (!isLatest('mgrTable', n)) return;
     updateNavBadge('page-mgr-eval', data.filter(r => !r.sepLoai).length);
     if (!data.length) {
-      tbody.innerHTML = '<tr><td colspan="22" style="text-align:center;padding:24px;color:var(--gray-400);">Chưa có VC-NLĐ nào nộp phiếu tháng này.</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="${span}" style="text-align:center;padding:24px;color:var(--gray-400);">Chưa có VC-NLĐ nào nộp phiếu tháng này.</td></tr>`;
       return;
     }
-    tbody.innerHTML = data.map(item => {
-      const done = !!item.sepLoai;
-      const details = item.chiTiet.map((v, i) =>
-        i === 16 ? `<td class="note">${cell(v)}</td>`
-                 : `<td${i >= 14 ? ' style="background:var(--gray-50);font-weight:700;"' : ''}>${cell(v)}</td>`).join('');
-      const opt = g => `<option value="${g}"${item.sepLoai === g ? ' selected' : ''}>${g}</option>`;
-      return `<tr class="${done ? 'row-done' : ''}" data-row="${esc(item.rowId)}" data-msnv="${esc(item.msnv)}" data-name="${esc(item.hoTen)}">
-        <td>${esc(item.hoTen)}</td>${details}
-        <td><input type="text" inputmode="decimal" class="mgr-input" value="${cell(item.sepDiem)}" oninput="autoGrade(this)"></td>
-        <td><select class="mgr-select"><option value="">--</option>${GRADES.map(opt).join('')}</select></td>
-        <td><input type="text" class="mgr-note-input" maxlength="1000" value="${esc(item.sepGhiChu)}"></td>
-        <td>${done ? '<span class="status-done">✅ Đã đánh giá</span>' : '<span class="status-pending">⏳ Chờ đánh giá</span>'}</td>
-      </tr>`;
-    }).join('');
+    tbody.innerHTML = data.map(item => v2 ? mgrRowV2(item) : mgrRowV1(item)).join('');
   } catch (e) {
     if (isLatest('mgrTable', n))
-      tbody.innerHTML = `<tr><td colspan="22" style="text-align:center;padding:24px;color:var(--danger);">⚠️ ${esc(e.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${span}" style="text-align:center;padding:24px;color:var(--danger);">⚠️ ${esc(e.message)}</td></tr>`;
   }
+}
+
+function mgrInputs(item) {
+  const opt = g => `<option value="${g}"${item.sepLoai === g ? ' selected' : ''}>${g}</option>`;
+  const done = !!item.sepLoai;
+  return `<td><input type="text" inputmode="decimal" class="mgr-input" value="${cell(item.sepDiem)}" oninput="autoGrade(this)"></td>
+    <td><select class="mgr-select"><option value="">--</option>${GRADES.map(opt).join('')}</select></td>
+    <td><input type="text" class="mgr-note-input" maxlength="1000" value="${esc(item.sepGhiChu)}"></td>
+    <td>${done ? '<span class="status-done">✅ Đã đánh giá</span>' : '<span class="status-pending">⏳ Chờ đánh giá</span>'}</td>`;
+}
+
+function mgrRowV1(item) {
+  const details = item.chiTiet.map((v, i) =>
+    i === 16 ? `<td class="note">${cell(v)}</td>`
+             : `<td${i >= 14 ? ' style="background:var(--gray-50);font-weight:700;"' : ''}>${cell(v)}</td>`).join('');
+  return `<tr class="${item.sepLoai ? 'row-done' : ''}" data-row="${esc(item.rowId)}" data-msnv="${esc(item.msnv)}" data-name="${esc(item.hoTen)}">
+    <td>${esc(item.hoTen)}</td>${details}${mgrInputs(item)}</tr>`;
+}
+
+function mgrRowV2(item) {
+  const d = item.diem || {};
+  const bold = ' style="background:var(--gray-50);font-weight:700;"';
+  const proposed = Number(item.thuong) || 0;
+  const bonusCell = proposed > 0
+    ? `<input type="text" inputmode="decimal" class="mgr-input mgr-bonus" placeholder="${fmt(proposed)}" value="${item.sepThuong === '' ? '' : fmt(item.sepThuong)}" oninput="mgrBonusChanged(this)" title="0 – ${fmt(proposed)} điểm">`
+    : '<span class="muted-sm">0</span>';
+  return `<tr class="${item.sepLoai ? 'row-done' : ''}" data-v2="1" data-row="${esc(item.rowId)}" data-msnv="${esc(item.msnv)}" data-name="${esc(item.hoTen)}"
+      data-kpi="${esc(item.tongKpi)}" data-proposed="${proposed}" data-ii1="${esc(d.ii1)}" data-ii2="${esc(d.ii2)}" data-ii3="${esc(d.ii3)}" data-ratio="${esc(item.tyLeVuot)}">
+    <td>${esc(item.hoTen)}</td>
+    ${V2_KEYS.map(k => `<td>${cell(d[k])}</td>`).join('')}
+    <td${bold}>${cell(item.tongKpi)}</td><td${bold}>${cell(item.thuong)}</td><td class="note">${cell(item.moTaThuong)}</td>
+    <td${bold}>${cell(item.tongDiem)}</td><td>${gradeBadge(item.xepLoai)}</td>
+    <td>${item.tyLeVuot === '' ? '' : cell(item.tyLeVuot) + '%'}</td><td class="note">${cell(item.canCuVuot)}</td><td class="note">${cell(item.lyDo)}</td>
+    <td>${bonusCell}</td>${mgrInputs(item)}</tr>`;
+}
+
+function parseBonus(raw, proposed) {
+  const s = String(raw || '').trim().replace(',', '.');
+  if (s === '') return { empty: true };
+  const n = Number(s);
+  return (isNaN(n) || n < 0 || n > proposed || Math.round(n * 2) !== n * 2) ? { invalid: true } : { value: n };
+}
+
+function mgrBonusChanged(el) {
+  const tr = el.closest('tr');
+  const p = parseBonus(el.value, Number(tr.dataset.proposed));
+  el.classList.toggle('invalid', !!p.invalid);
+  if (p.invalid) return;
+  const b = p.empty ? Number(tr.dataset.proposed) : p.value;
+  const score = Math.min(100, Math.round((Number(tr.dataset.kpi) + b) * 10) / 10);
+  const scoreEl = tr.querySelector('.mgr-input:not(.mgr-bonus)');
+  scoreEl.value = fmt(score).replace(',', '.');
+  autoGrade(scoreEl);
 }
 
 function parseScore(raw) {
@@ -1229,28 +1711,42 @@ function parseScore(raw) {
 
 function autoGrade(el) {
   const p = parseScore(el.value);
-  const sel = el.closest('tr').querySelector('.mgr-select');
+  const tr = el.closest('tr');
+  const sel = tr.querySelector('.mgr-select');
   el.classList.toggle('invalid', !!p.invalid);
   if (p.empty || p.invalid) { if (p.empty) sel.value = ''; return; }
-  sel.value = gradeOf(p.value);
+  if (tr.dataset.v2) {
+    const d = tr.dataset;
+    sel.value = gradeV2(p.value, Number(d.ii1), Number(d.ii2), Number(d.ii3), d.ratio).grade;
+  } else {
+    sel.value = gradeOf(p.value);
+  }
 }
 
 async function saveAllEvaluations() {
   const items = [];
   let bad = null;
   document.querySelectorAll('#staff-table-body tr[data-row]').forEach(tr => {
-    const scoreEl = tr.querySelector('.mgr-input');
+    const scoreEl = tr.querySelector('.mgr-input:not(.mgr-bonus)');
+    const bonusEl = tr.querySelector('.mgr-bonus');
     const grade = tr.querySelector('.mgr-select').value;
     const note = tr.querySelector('.mgr-note-input').value.trim();
     const p = parseScore(scoreEl.value);
-    if (p.invalid) { bad = bad || { el: scoreEl, name: tr.dataset.name }; return; }
-    if (p.empty && !grade && !note) return;
-    items.push({
+    if (p.invalid) { bad = bad || { el: scoreEl, msg: `Điểm TĐV của ${tr.dataset.name} phải là số từ 0 đến 100.` }; return; }
+    let pb = { empty: true };
+    if (bonusEl) {
+      pb = parseBonus(bonusEl.value, Number(tr.dataset.proposed));
+      if (pb.invalid) { bad = bad || { el: bonusEl, msg: `Thưởng công nhận của ${tr.dataset.name} phải từ 0 đến ${fmt(tr.dataset.proposed)} (bước 0,5).` }; return; }
+    }
+    if (p.empty && !grade && !note && pb.empty) return;
+    const it = {
       rowId: Number(tr.dataset.row), msnv: tr.dataset.msnv, hoTen: tr.dataset.name,
       sepDiem: p.empty ? '' : p.value, sepLoai: grade, sepGhiChu: note
-    });
+    };
+    if (tr.dataset.v2) it.sepThuong = pb.empty ? '' : pb.value;
+    items.push(it);
   });
-  if (bad) { bad.el.focus(); return alert(`⚠️ Điểm TĐV của ${bad.name} phải là số từ 0 đến 100.`); }
+  if (bad) { bad.el.focus(); return alert('⚠️ ' + bad.msg); }
   if (!items.length) return alert('Vui lòng nhập đánh giá trước khi lưu!');
 
   const btn = document.getElementById('btn-save-mgr');
@@ -1441,6 +1937,7 @@ function exportToCSV() {
 document.addEventListener('DOMContentLoaded', () => {
   getDeviceInfo();
   buildScoreRadios();
+  buildFormV2();
   initMonthPicker('mp-home', onHomeMonth);
   initMonthPicker('mp-mgr', () => setStatus(document.getElementById('status-msg-mgr'), '', ''));
   initMonthPicker('mp-mgr-stats', loadDashboard);

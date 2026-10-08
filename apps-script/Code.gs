@@ -12,7 +12,10 @@
  * Sheet DanhSachNhanSu cần cột "Email" cho Trưởng đơn vị và HR
  * (dùng để gửi mã OTP khi đăng nhập).
  *
- * Cột sheet DuLieuDanhGia:
+ * PHIẾU MỚI từ tháng 10/2026 (FORM_V2_FROM) lưu ở sheet DuLieuDanhGia_V2
+ * (tự tạo khi có phiếu đầu tiên). Tháng trước đó vẫn dùng phiếu cũ / sheet cũ.
+ *
+ * Cột sheet DuLieuDanhGia (phiếu cũ):
  *   A ThoiGian | B ThangDanhGia (MM-YYYY, text) | C HoTen | D DonVi
  *   E-G 1.1-1.3 | H-R 11 điểm thành phần | S Tổng | T Xếp loại | U Ghi chú A+
  *   V-X Trưởng đơn vị (điểm, loại, ghi chú) | Y MSNV (mới)
@@ -538,10 +541,305 @@ function ensureLoginHeader_(sheet) {
 }
 
 // ============================================================
+// PHIẾU MỚI (V2) — áp dụng từ tháng FORM_V2_FROM
+//   I.  Tiêu chí chung 30đ (I.1: 10đ | 2.1–2.4: 3+3+2+2 | 3.1–3.3: 4+3+3)
+//   II. Kết quả thực hiện nhiệm vụ 70đ (giữ như phiếu cũ)
+//   III. Điểm thưởng 0–7đ, tổng sau cộng tối đa 100
+// Lưu ở sheet riêng SHEET_DANHGIA_V2, sheet cũ giữ nguyên.
+// ============================================================
+const FORM_V2_FROM     = "10-2026";
+const SHEET_DANHGIA_V2 = "DuLieuDanhGia_V2";
+const TEXT_MAX_WORDS   = 100;
+const BONUS_MAX        = 7;
+
+const V2_RULES = {
+  i1:  { label: "I.1",  allowed: range_(0, 10, 0.5) },
+  i21: { label: "2.1",  allowed: range_(0, 3, 0.5) },
+  i22: { label: "2.2",  allowed: range_(0, 3, 0.5) },
+  i23: { label: "2.3",  allowed: range_(0, 2, 0.5) },
+  i24: { label: "2.4",  allowed: range_(0, 2, 0.5) },
+  i31: { label: "3.1",  allowed: range_(0, 4, 0.5) },
+  i32: { label: "3.2",  allowed: range_(0, 3, 0.5) },
+  i33: { label: "3.3",  allowed: range_(0, 3, 0.5) },
+  ii1: { label: "II.1", allowed: [0, 14, 15, 16, 17, 18, 18.5, 19, 19.5, 20] },
+  ii2: { label: "II.2", allowed: [0, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
+  ii3: { label: "II.3", allowed: [0, 22, 23, 24, 25, 26, 27, 28, 29, 30] }
+};
+const V2_KEYS     = Object.keys(V2_RULES);
+const BONUS_STEPS = range_(0, BONUS_MAX, 0.5);
+
+const V2COL = {
+  THOIGIAN: 0, THANG: 1, MSNV: 2, HOTEN: 3, DONVI: 4,
+  DIEM: 5,                 // F..P: 11 điểm theo thứ tự V2_KEYS
+  TONGKPI: 16,             // Q
+  THUONG: 17,              // R  thưởng đề xuất
+  MOTATHUONG: 18,          // S
+  TONGDIEM: 19,            // T  đã cộng thưởng, ≤ 100
+  XEPLOAI: 20,             // U
+  TYLEVUOT: 21,            // V  % nhiệm vụ vượt mức (khi xét A+)
+  CANCUVUOT: 22,           // W
+  LYDO: 23,                // X  lý do xếp loại thấp hơn mức điểm
+  SEPTHUONG: 24,           // Y  thưởng TĐV công nhận
+  SEPDIEM: 25,             // Z
+  SEPLOAI: 26,             // AA
+  SEPGHICHU: 27            // AB
+};
+const V2_TOTAL_COLS = 28;
+const V2_HEADERS = [
+  "Thời gian", "Tháng đánh giá", "MSNV", "Họ tên", "Đơn vị",
+  "I.1", "2.1", "2.2", "2.3", "2.4", "3.1", "3.2", "3.3", "II.1", "II.2", "II.3",
+  "Tổng KPI (I+II)", "Thưởng đề xuất", "Mô tả cách làm hay & minh chứng", "Tổng điểm (≤100)",
+  "Tự xếp loại", "Tỷ lệ nhiệm vụ vượt mức (%)", "Căn cứ xác nhận vượt mức", "Ghi chú xếp loại",
+  "Thưởng TĐV công nhận", "Điểm TĐV", "TĐV xếp loại", "Ghi chú TĐV"
+];
+const REPORT_HEADERS_V2 = [
+  "STT", "Họ và tên", "Đơn vị",
+  "I.1", "2.1", "2.2", "2.3", "2.4", "3.1", "3.2", "3.3", "II.1", "II.2", "II.3",
+  "Tổng KPI", "Thưởng đề xuất", "Mô tả cách làm hay & minh chứng", "Tổng điểm", "Tự xếp loại",
+  "Tỷ lệ vượt mức (%)", "Căn cứ vượt mức", "Ghi chú xếp loại",
+  "Thưởng TĐV công nhận", "Điểm TĐV", "TĐV xếp loại", "Ghi chú TĐV"
+];
+
+function isV2Month_(month) { return monthKey_(month) >= monthKey_(FORM_V2_FROM); }
+
+/**
+ * Xếp loại theo quy định mới. Trả về { grade, scoreGrade, reasons[], needsRatio }.
+ *   A+ : ≥ 90đ, hoàn thành 100% đúng hạn, bảo đảm chất lượng, ≥ 30% nhiệm vụ vượt mức
+ *   A  : 70 – <90đ, hoàn thành 100% đúng hạn, bảo đảm chất lượng
+ *   B  : 50 – <70đ, hoàn thành 100%, trễ tiến độ không quá 20%
+ *   C  : < 50đ hoặc không đạt điều kiện các mức trên
+ * Điều kiện suy từ điểm phần II:
+ *   100% số lượng ⇔ II.1 ≥ 18 | đúng tiến độ ⇔ II.2 ≥ 16 | đạt chất lượng ⇔ II.3 ≥ 26
+ *   trễ ≤ 20% ⇔ tiến độ ≥ 80% ⇔ II.2 ≥ 12
+ */
+function gradeV2_(total, ii1, ii2, ii3, ratio) {
+  const scoreGrade = total >= 90 ? "A+" : total >= 70 ? "A" : total >= 50 ? "B" : "C";
+  const full = ii1 >= 18, onTime = ii2 >= 16, quality = ii3 >= 26, lateOk = ii2 >= 12;
+  const condA = full && onTime && quality;
+  const condB = full && lateOk;
+  const r = (ratio === null || ratio === undefined || ratio === "") ? NaN : Number(ratio);
+  const why = [];
+  const add = t => { if (why.indexOf(t) < 0) why.push(t); };
+
+  let g = scoreGrade;
+  if (g === "A+" && condA && !(r >= 30)) { g = "A"; add("tỷ lệ nhiệm vụ vượt mức dưới 30%"); }
+  if ((g === "A+" || g === "A") && !condA) {
+    g = "B";
+    if (!full) add("chưa hoàn thành 100% số lượng");
+    if (!onTime) add("chưa đúng 100% tiến độ");
+    if (!quality) add("chưa đạt 100% yêu cầu chất lượng");
+  }
+  if (g === "B" && !condB) {
+    g = "C";
+    if (!full) add("chưa hoàn thành 100% số lượng");
+    if (!lateOk) add("trễ tiến độ quá 20%");
+  }
+  const reasons = g === scoreGrade ? [] :
+    ["Tổng điểm đạt mức " + scoreGrade + " nhưng " + why.join(", ") + " → xếp loại " + g];
+  return { grade: g, scoreGrade: scoreGrade, reasons: reasons, needsRatio: scoreGrade === "A+" && condA };
+}
+
+function countWords_(s) { const t = str_(s); return t ? t.split(/\s+/).length : 0; }
+function cleanText_(s, label) {
+  const t = str_(s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").slice(0, 1500);
+  if (countWords_(t) > TEXT_MAX_WORDS) throw appError_(label + " tối đa " + TEXT_MAX_WORDS + " từ", "BAD_INPUT");
+  return t;
+}
+function round1_(n) { return Math.round(n * 10) / 10; }
+
+function getV2Sheet_(create) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SHEET_DANHGIA_V2);
+  if (!sh && create) {
+    sh = ss.insertSheet(SHEET_DANHGIA_V2);
+    sh.getRange(1, 1, 1, V2_TOTAL_COLS).setValues([V2_HEADERS])
+      .setBackground("#0f2557").setFontColor("white").setFontWeight("bold").setWrap(true);
+    sh.setFrozenRows(1);
+    sh.getRange("B:C").setNumberFormat("@");
+  }
+  return sh;
+}
+
+function rowMonthV2_(r) { return normalizeMonth_(r[V2COL.THANG]); }
+function rowOwnedV2_(r, user) { return matchesId_(r[V2COL.MSNV], user.msnv); }
+function hasEntryV2_(data, user, month) {
+  for (let i = 1; i < data.length; i++)
+    if (rowOwnedV2_(data[i], user) && rowMonthV2_(data[i]) === month) return true;
+  return false;
+}
+
+function numOrBlank_(v) {
+  if (v === "" || v === null || v === undefined) return "";
+  const n = Number(v);
+  return isNaN(n) ? "" : n;
+}
+
+function mapRowV2_(r, i) {
+  const diem = {};
+  V2_KEYS.forEach((k, j) => { diem[k] = numOrBlank_(r[V2COL.DIEM + j]); });
+  return {
+    version:     2,
+    rowId:       i + 1,
+    msnv:        str_(r[V2COL.MSNV]),
+    hoTen:       str_(r[V2COL.HOTEN]),
+    donVi:       str_(r[V2COL.DONVI]),
+    diem:        diem,
+    tongKpi:     numOrBlank_(r[V2COL.TONGKPI]),
+    thuong:      numOrBlank_(r[V2COL.THUONG]),
+    moTaThuong:  str_(r[V2COL.MOTATHUONG]),
+    tongDiem:    numOrBlank_(r[V2COL.TONGDIEM]),
+    xepLoai:     str_(r[V2COL.XEPLOAI]),
+    tyLeVuot:    numOrBlank_(r[V2COL.TYLEVUOT]),
+    canCuVuot:   str_(r[V2COL.CANCUVUOT]),
+    lyDo:        str_(r[V2COL.LYDO]),
+    sepThuong:   numOrBlank_(r[V2COL.SEPTHUONG]),
+    sepDiem:     numOrBlank_(r[V2COL.SEPDIEM]),
+    sepLoai:     str_(r[V2COL.SEPLOAI]),
+    sepGhiChu:   str_(r[V2COL.SEPGHICHU])
+  };
+}
+
+function reportRowV2_(it, idx) {
+  return [idx + 1, it.hoTen, it.donVi]
+    .concat(V2_KEYS.map(k => it.diem[k]))
+    .concat([it.tongKpi, it.thuong, it.moTaThuong, it.tongDiem, it.xepLoai,
+             it.tyLeVuot, it.canCuVuot, it.lyDo, it.sepThuong, it.sepDiem, it.sepLoai, it.sepGhiChu]);
+}
+
+function saveDataV2_(form, user, month) {
+  const scores = {};
+  let kpi = 0;
+  V2_KEYS.forEach(k => {
+    const raw = str_(form[k]);
+    const v = Number(raw);
+    if (raw === "" || V2_RULES[k].allowed.indexOf(v) < 0)
+      throw appError_("Điểm mục " + V2_RULES[k].label + " không hợp lệ", "BAD_INPUT");
+    scores[k] = v;
+    kpi += v;
+  });
+  kpi = round1_(kpi);
+
+  const thuong = Number(str_(form.thuong) || 0);
+  if (BONUS_STEPS.indexOf(thuong) < 0) throw appError_("Điểm thưởng không hợp lệ (0 – " + BONUS_MAX + " điểm)", "BAD_INPUT");
+  let moTa = "";
+  if (thuong > 0) {
+    moTa = cleanText_(form.moTaThuong, "Mô tả điểm thưởng");
+    if (!moTa) throw appError_("Vui lòng mô tả cách làm hay / phương pháp mới và minh chứng cho điểm thưởng", "BAD_INPUT");
+  }
+  const total = Math.min(100, round1_(kpi + thuong));
+
+  const pre = gradeV2_(total, scores.ii1, scores.ii2, scores.ii3, null);
+  let ratio = "", canCu = "";
+  if (pre.needsRatio) {
+    const rr = str_(form.tyLeVuot);
+    ratio = Number(rr);
+    if (rr === "" || isNaN(ratio) || ratio < 0 || ratio > 100 || Math.floor(ratio) !== ratio)
+      throw appError_("Vui lòng nhập tỷ lệ nhiệm vụ hoàn thành vượt mức (0 – 100%)", "BAD_INPUT");
+    if (ratio >= 30) {
+      canCu = cleanText_(form.canCuVuot, "Căn cứ xác nhận vượt mức");
+      if (!canCu) throw appError_("Vui lòng ghi căn cứ xác nhận vượt mức yêu cầu (bắt buộc khi xếp loại A+)", "BAD_INPUT");
+    }
+  }
+  const g = gradeV2_(total, scores.ii1, scores.ii2, scores.ii3, ratio);
+
+  return withLock_(() => {
+    const sheet = getV2Sheet_(true);
+    if (hasEntryV2_(sheet.getDataRange().getValues(), user, month))
+      throw appError_("Bạn đã gửi đánh giá tháng " + month.replace("-", "/") + " rồi!", "DUPLICATE");
+
+    const row = new Array(V2_TOTAL_COLS).fill("");
+    row[V2COL.THOIGIAN]   = new Date();
+    row[V2COL.THANG]      = month;
+    row[V2COL.MSNV]       = user.msnv;
+    row[V2COL.HOTEN]      = user.hoTen;
+    row[V2COL.DONVI]      = user.donVi;
+    V2_KEYS.forEach((k, j) => { row[V2COL.DIEM + j] = scores[k]; });
+    row[V2COL.TONGKPI]    = kpi;
+    row[V2COL.THUONG]     = thuong;
+    row[V2COL.MOTATHUONG] = safeCell_(moTa);
+    row[V2COL.TONGDIEM]   = total;
+    row[V2COL.XEPLOAI]    = g.grade;
+    row[V2COL.TYLEVUOT]   = ratio;
+    row[V2COL.CANCUVUOT]  = safeCell_(canCu);
+    row[V2COL.LYDO]       = g.reasons.join("; ");
+
+    const newRow = sheet.getLastRow() + 1;
+    sheet.getRange(newRow, V2COL.THANG + 1, 1, 2).setNumberFormat("@");
+    sheet.getRange(newRow, 1, 1, V2_TOTAL_COLS).setValues([row]);
+    SpreadsheetApp.flush();
+    return { score: total.toFixed(1), grade: g.grade, reasons: g.reasons, version: 2 };
+  });
+}
+
+function listV2_(month, donVi) {
+  const sheet = getV2Sheet_(false);
+  if (!sheet) return [];
+  const data = sheet.getDataRange().getValues();
+  const out = [];
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    if (rowMonthV2_(r) !== month) continue;
+    if (donVi !== undefined && str_(r[V2COL.DONVI]) !== donVi) continue;
+    out.push(mapRowV2_(r, i));
+  }
+  return out;
+}
+
+function updateManagerV2_(items, user, month) {
+  const clean = items.map(it => {
+    it = it || {};
+    const hoTen = str_(it.hoTen);
+    const base = parseMgrItem_(it);
+    const rawT = str_(it.sepThuong).replace(",", ".");
+    let sepThuong = "";
+    if (rawT !== "") {
+      sepThuong = Number(rawT);
+      if (BONUS_STEPS.indexOf(sepThuong) < 0)
+        throw appError_("Thưởng công nhận của " + hoTen + " phải từ 0 đến " + BONUS_MAX + " (bước 0,5)", "BAD_INPUT");
+    }
+    base.sepThuong = sepThuong;
+    return base;
+  });
+
+  return withLock_(() => {
+    const sheet = getV2Sheet_(false);
+    if (!sheet) throw appError_("Chưa có phiếu nào của tháng này", "NO_DATA");
+    const data = sheet.getDataRange().getValues();
+    const belongs = (r, it) => r && str_(r[V2COL.DONVI]) === user.donVi && rowMonthV2_(r) === month &&
+      (it.msnv ? matchesId_(r[V2COL.MSNV], it.msnv) : str_(r[V2COL.HOTEN]) === it.hoTen);
+
+    // Kiểm tra hết trước, rồi mới ghi (tránh ghi dở dang khi một dòng lỗi)
+    const missing = [];
+    const writes = [];
+    clean.forEach(it => {
+      let idx = -1;
+      const hinted = it.rowId - 1;
+      if (hinted >= 1 && hinted < data.length && belongs(data[hinted], it)) idx = hinted;
+      else for (let i = 1; i < data.length; i++) if (belongs(data[i], it)) { idx = i; break; }
+      if (idx < 0) { missing.push(it.hoTen); return; }
+
+      const proposed = Number(data[idx][V2COL.THUONG]) || 0;
+      const t = it.sepThuong === "" ? proposed : it.sepThuong;   // để trống = công nhận như đề xuất
+      if (t > proposed)
+        throw appError_("Thưởng công nhận của " + it.hoTen + " không được vượt mức đề xuất (" + proposed + "đ)", "BAD_INPUT");
+      writes.push({ row: idx + 1, values: [t, it.sepDiem, it.sepLoai, safeCell_(it.sepGhiChu)] });
+    });
+    writes.forEach(w => sheet.getRange(w.row, V2COL.SEPTHUONG + 1, 1, 4).setValues([w.values]));
+    const saved = writes.length;
+    SpreadsheetApp.flush();
+    return { saved: saved, missing: missing };
+  });
+}
+
+// ============================================================
 // 2. KIỂM TRA TRÙNG LẶP (theo MSNV của người đang đăng nhập)
 // ============================================================
 function checkDoubleEntry_(args, user) {
   const month = requireMonth_(args.month);
+  if (isV2Month_(month)) {
+    const sh = getV2Sheet_(false);
+    return sh ? hasEntryV2_(sh.getDataRange().getValues(), user, month) : false;
+  }
   const sheet = getSheet_(SHEET_DANHGIA, true);
   if (!sheet) return false;
   return hasEntry_(sheet.getDataRange().getValues(), user, month);
@@ -554,6 +852,11 @@ function checkDoubleEntry_(args, user) {
 function saveData_(args, user) {
   const form  = args.form || {};
   const month = requireMonth_(form.assessmentMonth);
+  const v2 = isV2Month_(month);
+  if (v2 !== (Number(form.formVersion) === 2))
+    throw appError_("Tháng " + month.replace("-", "/") + " dùng mẫu phiếu " + (v2 ? "mới" : "cũ") +
+                    ". Vui lòng tải lại trang (F5) rồi đánh giá lại.", "FORM_VERSION");
+  if (v2) return saveDataV2_(form, user, month);
 
   const crit = ["diem_1_1", "diem_1_2", "diem_1_3"].map(k => {
     const v = str_(form[k]);
@@ -620,6 +923,8 @@ function saveData_(args, user) {
 // ============================================================
 function getStaffData_(args, user) {
   const month = requireMonth_(args.month);
+  if (isV2Month_(month))
+    return listV2_(month, user.donVi).sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi"));
   const sheet = getSheet_(SHEET_DANHGIA, true);
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
@@ -642,6 +947,7 @@ function updateManagerEvaluations_(args, user) {
   const items = Array.isArray(args.items) ? args.items : [];
   if (!items.length) throw appError_("Không có đánh giá nào để lưu", "BAD_INPUT");
   if (items.length > 1000) throw appError_("Quá nhiều dòng trong một lần lưu", "BAD_INPUT");
+  if (isV2Month_(month)) return updateManagerV2_(items, user, month);
   const clean = items.map(parseMgrItem_);
 
   const lock = LockService.getScriptLock();
@@ -703,10 +1009,27 @@ function parseMgrItem_(it) {
 // 6. LỊCH SỬ CÁ NHÂN
 // ============================================================
 function getUserHistory_(_args, user) {
-  const sheet = getSheet_(SHEET_DANHGIA, true);
-  if (!sheet) return [];
-  const data = sheet.getDataRange().getValues();
   const out = [];
+  const shV2 = getV2Sheet_(false);
+  if (shV2) {
+    const d2 = shV2.getDataRange().getValues();
+    for (let i = 1; i < d2.length; i++) {
+      const r = d2[i];
+      if (!rowOwnedV2_(r, user)) continue;
+      const thang = rowMonthV2_(r);
+      if (!thang) continue;
+      out.push({
+        thang: thang,
+        donVi: str_(r[V2COL.DONVI]),
+        tongDiem: cellOut_(r[V2COL.TONGDIEM]),
+        xepLoai: str_(r[V2COL.XEPLOAI]),
+        sepLoai: str_(r[V2COL.SEPLOAI])
+      });
+    }
+  }
+  const sheet = getSheet_(SHEET_DANHGIA, true);
+  if (!sheet) return out.sort((a, b) => monthKey_(b.thang) - monthKey_(a.thang));
+  const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
     const r = data[i];
     if (!rowOwnedBy_(r, user)) continue;
@@ -731,6 +1054,8 @@ function getAllStaffData_(args) {
 }
 
 function listAll_(month) {
+  if (isV2Month_(month))
+    return listV2_(month).sort((a, b) => a.donVi.localeCompare(b.donVi, "vi") || a.hoTen.localeCompare(b.hoTen, "vi"));
   const sheet = getSheet_(SHEET_DANHGIA, true);
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
@@ -760,9 +1085,12 @@ function buildReportSheet_(month) {
   if (old) ss.deleteSheet(old);
   const report = ss.insertSheet(sheetName);
 
-  const rows = data.map((it, idx) => [idx + 1, it.hoTen, it.donVi].concat(it.chiTiet, [it.sepDiem, it.sepLoai, it.sepGhiChu]));
-  const w = REPORT_HEADERS.length;
-  report.getRange(1, 1, 1, w).setValues([REPORT_HEADERS])
+  const v2 = isV2Month_(month);
+  const headers = v2 ? REPORT_HEADERS_V2 : REPORT_HEADERS;
+  const rows = v2 ? data.map(reportRowV2_)
+                  : data.map((it, idx) => [idx + 1, it.hoTen, it.donVi].concat(it.chiTiet, [it.sepDiem, it.sepLoai, it.sepGhiChu]));
+  const w = headers.length;
+  report.getRange(1, 1, 1, w).setValues([headers])
         .setBackground("#0f2557").setFontColor("white").setFontWeight("bold");
   report.getRange(2, 1, rows.length, w).setValues(rows)
         .setBackgrounds(rows.map((_, i) => new Array(w).fill(i % 2 === 0 ? "#f8fafc" : "#ffffff")));
@@ -782,9 +1110,12 @@ function exportCSVData_(args) {
     const s = (v === null || v === undefined) ? "" : String(v);
     return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
-  const lines = [REPORT_HEADERS.map(escape).join(",")];
+  const v2 = isV2Month_(month);
+  const lines = [(v2 ? REPORT_HEADERS_V2 : REPORT_HEADERS).map(escape).join(",")];
   data.forEach((it, idx) => {
-    lines.push([idx + 1, it.hoTen, it.donVi].concat(it.chiTiet, [it.sepDiem, it.sepLoai, it.sepGhiChu]).map(escape).join(","));
+    const row = v2 ? reportRowV2_(it, idx)
+                   : [idx + 1, it.hoTen, it.donVi].concat(it.chiTiet, [it.sepDiem, it.sepLoai, it.sepGhiChu]);
+    lines.push(row.map(escape).join(","));
   });
 
   const csv = "\uFEFF" + lines.join("\r\n");
