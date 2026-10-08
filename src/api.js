@@ -67,6 +67,19 @@ export async function handleApi(request, env) {
   }
 
   const result = await callAppsScript(env.APPS_SCRIPT_URL, payload);
+  if (!result.ok && result.denied) {
+    return json(
+      {
+        success: false,
+        code: "CONFIG",
+        message:
+          "Google từ chối truy cập Web App (" + result.detail + "). Quản trị viên kiểm tra: " +
+          "(1) Deploy với 'Ai có quyền truy cập: Bất kỳ ai' (không phải 'Bất kỳ ai có Tài khoản Google'); " +
+          "(2) APPS_SCRIPT_URL phải kết thúc bằng /exec, không phải /dev.",
+      },
+      502
+    );
+  }
   if (!result.ok) {
     return json(
       {
@@ -143,6 +156,8 @@ export async function callAppsScript(url, payload, opts = {}) {
     const t = await res.text();
     if (res.ok && isJson(t)) return { ok: true, text: t };
     detail = "HTTP " + res.status;
+    // 401/403: Web App không cho truy cập công khai → lỗi cấu hình, thử lại vô ích
+    if (res.status === 401 || res.status === 403) return { ok: false, denied: true, detail };
     // 404 / 429 / 5xx ở bước (1): script chưa chạy → thử lại
   }
   return { ok: false, detail };
