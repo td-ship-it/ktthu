@@ -620,38 +620,14 @@ function isV2Month_(month) { return monthKey_(month) >= monthKey_(FORM_V2_FROM);
 function bonusCap_(_kpi) { return BONUS_MAX; }
 
 /**
- * Xếp loại theo quy định. Trả về { grade, scoreGrade, reasons[] }.
- *   A+ : ≥ 90đ, hoàn thành 100% đúng hạn, bảo đảm chất lượng (+ ghi căn cứ vượt mức)
- *   A  : 70 – <90đ, hoàn thành 100% đúng hạn, bảo đảm chất lượng
- *   B  : 50 – <70đ, hoàn thành 100%, trễ tiến độ không quá 20%
- *   C  : < 50đ hoặc không đạt điều kiện các mức trên
- * Điều kiện suy từ điểm phần II:
- *   100% số lượng ⇔ II.1 ≥ 18 | đúng tiến độ ⇔ II.2 ≥ 16 | đạt chất lượng ⇔ II.3 ≥ 26
- *   trễ ≤ 20% ⇔ tiến độ ≥ 80% ⇔ II.2 ≥ 12
+ * Xếp loại chỉ theo tổng điểm (đã cộng thưởng, tối đa 100):
+ *   A+ ≥ 90 · A 70 – <90 · B 50 – <70 · C < 50
+ * Không hạ xếp loại theo điểm phần II. Mức A+ bắt buộc ghi căn cứ xác nhận vượt mức.
+ * (Giữ tham số ii1–ii3 để không phải đổi chỗ gọi.)
  */
-function gradeV2_(total, ii1, ii2, ii3) {
-  const scoreGrade = total >= 90 ? "A+" : total >= 70 ? "A" : total >= 50 ? "B" : "C";
-  const full = ii1 >= 18, onTime = ii2 >= 16, quality = ii3 >= 26, lateOk = ii2 >= 12;
-  const condA = full && onTime && quality;
-  const condB = full && lateOk;
-  const why = [];
-  const add = t => { if (why.indexOf(t) < 0) why.push(t); };
-
-  let g = scoreGrade;
-  if ((g === "A+" || g === "A") && !condA) {
-    g = "B";
-    if (!full) add("chưa hoàn thành 100% số lượng");
-    if (!onTime) add("chưa đúng 100% tiến độ");
-    if (!quality) add("chưa đạt 100% yêu cầu chất lượng");
-  }
-  if (g === "B" && !condB) {
-    g = "C";
-    if (!full) add("chưa hoàn thành 100% số lượng");
-    if (!lateOk) add("trễ tiến độ quá 20%");
-  }
-  const reasons = g === scoreGrade ? [] :
-    ["Tổng điểm đạt mức " + scoreGrade + " nhưng " + why.join(", ") + " → xếp loại " + g];
-  return { grade: g, scoreGrade: scoreGrade, reasons: reasons };
+function gradeV2_(total, _ii1, _ii2, _ii3) {
+  const g = total >= 90 ? "A+" : total >= 70 ? "A" : total >= 50 ? "B" : "C";
+  return { grade: g, scoreGrade: g, reasons: [] };
 }
 
 function countWords_(s) { const t = str_(s); return t ? t.split(/\s+/).length : 0; }

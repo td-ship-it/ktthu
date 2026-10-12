@@ -94,15 +94,7 @@ Từ **tháng đánh giá 10/2026** app dùng phiếu *"Tiêu chí đánh giá h
   - 3.1 (0/4), 3.2 (0/3), 3.3 (0/3) — ai cũng tự chấm 3.3
   - Phần II giữ nguyên, mỗi mức có ghi kèm % tương ứng
 - **Điểm thưởng:** tối đa đủ 7 điểm (Phòng TCCB chốt không áp giới hạn 10% KPI; dòng ghi chú trên phiếu vẫn giữ nguyên văn). Đề xuất > 0 thì bắt buộc mô tả cách làm hay & minh chứng. Tổng sau cộng tối đa 100.
-- **Xếp loại:** A+ ≥ 90 · A 70–<90 · B 50–<70 · C < 50, **kèm điều kiện** suy từ điểm phần II:
-
-  | Mức | Điều kiện | App kiểm tra |
-  |---|---|---|
-  | A+ | 100% đúng hạn, bảo đảm chất lượng | II.1 ≥ 18, II.2 ≥ 16, II.3 ≥ 26 + **bắt buộc ghi căn cứ xác nhận vượt mức** |
-  | A | 100% đúng hạn, bảo đảm chất lượng | II.1 ≥ 18, II.2 ≥ 16, II.3 ≥ 26 |
-  | B | hoàn thành 100%, trễ tiến độ ≤ 20% | II.1 ≥ 18, II.2 ≥ 12 |
-
-  Không đủ điều kiện thì hạ xuống mức thấp hơn, app ghi rõ lý do (cột *Ghi chú xếp loại*).
+- **Xếp loại chỉ theo tổng điểm** (đã cộng thưởng, tối đa 100): A+ ≥ 90 · A 70–<90 · B 50–<70 · C < 50. Không hạ xếp loại theo điểm phần II. Đạt A+ thì **bắt buộc ghi căn cứ xác nhận vượt mức**. Cột *Ghi chú xếp loại* trong sheet được giữ để không lệch cấu trúc, nay luôn để trống.
 - **Ô ghi chú** (mô tả thưởng, căn cứ vượt mức) tối đa **100 từ**, có bộ đếm.
 - **Trưởng đơn vị** nhập *Thưởng công nhận* (0 → mức đề xuất; để trống = công nhận đúng đề xuất); Điểm TĐV và xếp loại tự tính lại, vẫn sửa tay được.
 - **Dữ liệu** lưu ở sheet `DuLieuDanhGia_KPI` (tự tạo khi có phiếu đầu tiên); sheet `DuLieuDanhGia` cũ giữ nguyên. Lịch sử cá nhân hiện cả hai; báo cáo/xuất Excel/CSV tháng nào theo mẫu tháng đó. (Sheet `DuLieuDanhGia_V2` nếu có là dữ liệu thử của bản nháp — xóa được.)

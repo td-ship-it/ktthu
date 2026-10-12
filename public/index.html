@@ -1473,27 +1473,10 @@ function bindWordLimit(taId, countId, errId) {
   ta._wlUpdate = update;
 }
 
-/** Xếp loại theo quy định — giống hệt gradeV2_ ở backend */
-function gradeV2(total, ii1, ii2, ii3) {
-  const scoreGrade = total >= 90 ? 'A+' : total >= 70 ? 'A' : total >= 50 ? 'B' : 'C';
-  const full = ii1 >= 18, onTime = ii2 >= 16, quality = ii3 >= 26, lateOk = ii2 >= 12;
-  const condA = full && onTime && quality, condB = full && lateOk;
-  const why = [];
-  const add = t => { if (!why.includes(t)) why.push(t); };
-  let g = scoreGrade;
-  if ((g === 'A+' || g === 'A') && !condA) {
-    g = 'B';
-    if (!full) add('chưa hoàn thành 100% số lượng');
-    if (!onTime) add('chưa đúng 100% tiến độ');
-    if (!quality) add('chưa đạt 100% yêu cầu chất lượng');
-  }
-  if (g === 'B' && !condB) {
-    g = 'C';
-    if (!full) add('chưa hoàn thành 100% số lượng');
-    if (!lateOk) add('trễ tiến độ quá 20%');
-  }
-  return { grade: g, scoreGrade,
-           reasons: g === scoreGrade ? [] : [`Tổng điểm đạt mức ${scoreGrade} nhưng ${why.join(', ')} → xếp loại ${g}`] };
+/** Xếp loại chỉ theo tổng điểm — giống hệt gradeV2_ ở backend (không hạ loại theo phần II) */
+function gradeV2(total, _ii1, _ii2, _ii3) {
+  const g = total >= 90 ? 'A+' : total >= 70 ? 'A' : total >= 50 ? 'B' : 'C';
+  return { grade: g, scoreGrade: g, reasons: [] };
 }
 
 function v2Val(name) {
