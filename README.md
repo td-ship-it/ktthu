@@ -99,6 +99,11 @@ Từ **tháng đánh giá 10/2026** app dùng phiếu *"Tiêu chí đánh giá h
 - **Trưởng đơn vị** nhập *Thưởng công nhận* (0 → mức đề xuất; để trống = công nhận đúng đề xuất); Điểm TĐV và xếp loại tự tính lại, vẫn sửa tay được.
 - **Dữ liệu** lưu ở sheet `DuLieuDanhGia_KPI` (tự tạo khi có phiếu đầu tiên); sheet `DuLieuDanhGia` cũ giữ nguyên. Lịch sử cá nhân hiện cả hai; báo cáo/xuất Excel/CSV tháng nào theo mẫu tháng đó. (Sheet `DuLieuDanhGia_V2` nếu có là dữ liệu thử của bản nháp — xóa được.)
 
+## Người làm việc ở nhiều đơn vị
+
+- Mỗi **đơn vị đánh giá riêng**: kiểm tra "đã gửi" theo *mã số + đơn vị + tháng* (gửi ở đơn vị A vẫn gửi được ở đơn vị B; gửi lại ở A thì bị chặn). Lịch sử cá nhân hiện cả hai đơn vị.
+- Nút **🔄 Chuyển đơn vị** (trên menu trái và cạnh dòng "Đơn vị" ở trang Tự đánh giá) — chỉ hiện với người có từ 2 đơn vị/vai trò trở lên. Chuyển không cần đăng xuất; đã xác thực OTP lúc đăng nhập thì không phải nhập lại. Mỗi lần chuyển được ghi vào `LichSuDangNhap` (trạng thái "🔄 Chuyển đơn vị").
+
 ## Tốc độ
 
 - **Đọc ít dữ liệu:** backend dùng *TextFinder* của Sheets để tìm đúng dòng cần (theo MSNV, theo tháng) thay vì đọc cả sheet — đăng nhập, kiểm tra đã nộp, lịch sử, bảng Trưởng đơn vị, dashboard HR đều chỉ đọc phần liên quan. Lưu bảng chấm ghi một lần cho cả nhóm dòng.

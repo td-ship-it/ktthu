@@ -86,6 +86,7 @@ const ROUTES = {
   login:                    { auth: null,      fn: login_ },
   verifyOtp:                { auth: null,      fn: verifyOtp_ },
   resendOtp:                { auth: null,      fn: resendOtp_ },
+  switchUnit:               { auth: "any",     fn: switchUnit_ },
   checkDoubleEntry:         { auth: "any",     fn: checkDoubleEntry_ },
   saveData:                 { auth: "any",     fn: saveData_ },
   getUserHistory:           { auth: "any",     fn: getUserHistory_ },
@@ -170,13 +171,14 @@ function login_(args, _user, req) {
   }
 
   const user = { msnv: chosen.msnv, hoTen: chosen.hoTen, donVi: chosen.donVi, role: chosen.role };
+  const units = unitList_(matches);
 
   // Người có vai trò Trưởng đơn vị / HR ở BẤT KỲ đơn vị nào đều phải qua OTP,
   // kể cả khi đang chọn vai trò VC-NLĐ.
   const privileged = matches.some(m => PRIVILEGED_ROLES.indexOf(m.role) >= 0);
   if (!privileged) {
     logLogin_(ctx, user, "✅ Thành công");
-    return { multiUnit: false, token: signToken_(user, false), user: user };
+    return { multiUnit: false, token: signToken_(user, false), user: user, units: units };
   }
 
   const email = chosen.email || (matches.find(m => isEmail_(m.email)) || {}).email || "";
@@ -191,7 +193,7 @@ function login_(args, _user, req) {
   const code  = newOtpCode_();
   sendOtpEmail_(email, user, code, ctx);
   putOtp_(otpId, {
-    user: user, email: email, hash: otpHash_(otpId, code),
+    user: user, units: units, email: email, hash: otpHash_(otpId, code),
     exp: nowSec_() + OTP_TTL_SEC, sentAt: nowSec_(), attempts: 0, resends: 0, ip: ctx.ip
   });
   logLogin_(ctx, user, "📧 Đã gửi OTP", "Gửi tới " + maskEmail_(email), otpId);
@@ -240,7 +242,7 @@ function verifyOtp_(args, _user, req) {
 
     delOtp_(otpId);
     logLogin_(ctx, rec.user, "✅ Thành công (OTP)", ipNote, otpId);
-    return { token: signToken_(rec.user, true), user: rec.user };
+    return { token: signToken_(rec.user, true), user: rec.user, units: rec.units || [] };
   }
 }
 
@@ -272,6 +274,29 @@ function resendOtp_(args, _user, req) {
     logLogin_(ctx, rec.user, "📧 Gửi lại OTP", "Lần " + rec.resends + " · tới " + maskEmail_(rec.email), otpId);
     return { maskedEmail: maskEmail_(rec.email), expiresIn: OTP_TTL_SEC, resendAfter: OTP_RESEND_COOLDOWN };
   });
+}
+
+function unitList_(matches) {
+  return matches.map(m => ({ donVi: m.donVi, role: m.role }));
+}
+
+/**
+ * Chuyển sang đơn vị khác của chính người đang đăng nhập (người làm việc ở nhiều đơn vị),
+ * không cần đăng xuất. Đã xác thực OTP lúc đăng nhập thì không phải nhập lại.
+ */
+function switchUnit_(args, user, req) {
+  const ctx = clientCtx_(req, args);
+  const donVi = str_(args.donVi), role = str_(args.role);
+  const matches = findStaff_(user.msnv);
+  const target = matches.find(m => m.donVi === donVi && (!role || m.role === role));
+  if (!target) throw appError_("Không tìm thấy đơn vị này trong danh sách của Quý Thầy/Cô", "BAD_INPUT");
+  const mfa = user.mfa === 1;
+  if (PRIVILEGED_ROLES.indexOf(target.role) >= 0 && !mfa)
+    throw appError_("Vui lòng đăng nhập lại để xác thực OTP cho vai trò này", "AUTH");
+
+  const next = { msnv: target.msnv, hoTen: target.hoTen, donVi: target.donVi, role: target.role };
+  logLogin_(ctx, next, "🔄 Chuyển đơn vị", "Từ: " + user.donVi);
+  return { token: signToken_(next, mfa), user: next, units: unitList_(matches) };
 }
 
 function findStaff_(msnv) {
@@ -730,8 +755,8 @@ function saveDataV2_(form, user, month) {
 
   return withLock_(() => {
     const sheet = getV2Sheet_(true);
-    if (userRowsV2_(sheet, user).some(x => rowMonthV2_(x.r) === month))
-      throw appError_("Bạn đã gửi đánh giá tháng " + month.replace("-", "/") + " rồi!", "DUPLICATE");
+    if (userRowsV2_(sheet, user).some(x => rowMonthV2_(x.r) === month && str_(x.r[V2COL.DONVI]) === user.donVi))
+      throw appError_("Bạn đã gửi đánh giá tháng " + month.replace("-", "/") + " tại " + user.donVi + " rồi!", "DUPLICATE");
 
     const row = new Array(V2_TOTAL_COLS).fill("");
     row[V2COL.THOIGIAN]   = new Date();
@@ -837,11 +862,11 @@ function checkDoubleEntry_(args, user) {
   const month = requireMonth_(args.month);
   if (isV2Month_(month)) {
     const sh = getV2Sheet_(false);
-    return sh ? userRowsV2_(sh, user).some(x => rowMonthV2_(x.r) === month) : false;
+    return sh ? userRowsV2_(sh, user).some(x => rowMonthV2_(x.r) === month && str_(x.r[V2COL.DONVI]) === user.donVi) : false;
   }
   const sheet = getSheet_(SHEET_DANHGIA, true);
   if (!sheet) return false;
-  return userRowsV1_(sheet, user).some(x => rowMonth_(x.r) === month);
+  return userRowsV1_(sheet, user).some(x => rowMonth_(x.r) === month && str_(x.r[COL.DONVI]) === user.donVi);
 }
 
 // ============================================================
@@ -890,7 +915,7 @@ function saveData_(args, user) {
     const sheet = getSheet_(SHEET_DANHGIA);
     ensureMsnvHeader_(sheet);
     if (hasEntry_(sheet.getDataRange().getValues(), user, month))
-      throw appError_("Bạn đã gửi đánh giá tháng " + month.replace("-", "/") + " rồi!", "DUPLICATE");
+      throw appError_("Bạn đã gửi đánh giá tháng " + month.replace("-", "/") + " tại " + user.donVi + " rồi!", "DUPLICATE");
 
     const row = new Array(TOTAL_COLS).fill("");
     row[COL.THOIGIAN]     = new Date();
@@ -1315,7 +1340,7 @@ function rowOwnedBy_(row, user) {
 
 function hasEntry_(data, user, month) {
   for (let i = 1; i < data.length; i++)
-    if (rowOwnedBy_(data[i], user) && rowMonth_(data[i]) === month) return true;
+    if (rowOwnedBy_(data[i], user) && rowMonth_(data[i]) === month && str_(data[i][COL.DONVI]) === user.donVi) return true;
   return false;
 }
 

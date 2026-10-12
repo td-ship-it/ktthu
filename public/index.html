@@ -77,6 +77,16 @@
       border: none; background: none; width: 100%; text-align: left; font-family: inherit;
     }
     .nav-logout:hover { background: rgba(239,68,68,.15); color: #fca5a5; }
+    .nav-switch { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 16px 4px; width: calc(100% - 32px);
+      padding: 9px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08);
+      color: white; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .nav-switch:hover { background: rgba(255,255,255,.18); }
+    .unit-switch-link { margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; font-family: inherit; }
+    .unit-choice { display: block; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 8px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+      background: white; cursor: pointer; font-family: inherit; font-size: 14px; color: var(--gray-800); }
+    .unit-choice:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-light); }
+    .unit-choice.current { border-color: var(--success); background: #f0fdf4; cursor: default; }
+    .unit-choice small { display: block; color: var(--gray-400); font-size: 12px; margin-top: 2px; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
     .sidebar-overlay.show { display: block; }
     .main-area { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; min-width: 0; }
@@ -335,6 +345,7 @@
         <div class="s-user-role" id="s-user-role">--</div>
       </div>
     </div>
+    <button class="nav-switch hidden" id="btn-switch-unit" onclick="showSwitchUnit()">🔄 Chuyển đơn vị</button>
     <nav class="sidebar-nav" id="sidebar-nav"></nav>
     <div class="sidebar-footer">
       <button class="nav-logout" onclick="logout()"><span style="font-size:16px;">⏻</span> Đăng xuất</button>
@@ -360,7 +371,7 @@
           <div class="card-title">📝 Tự đánh giá cá nhân</div>
           <div class="info-box">
             <div class="info-row"><span class="info-label">👤 Họ tên:</span><span class="info-value" id="dsp-name"></span></div>
-            <div class="info-row"><span class="info-label">🏢 Đơn vị:</span><span class="info-value" id="dsp-unit"></span></div>
+            <div class="info-row"><span class="info-label">🏢 Đơn vị:</span><span class="info-value"><span id="dsp-unit"></span><button type="button" class="unit-switch-link hidden" id="lnk-switch-unit" onclick="showSwitchUnit()">Đổi đơn vị</button></span></div>
           </div>
           <div class="form-group">
             <span class="form-label">📅 Chọn tháng đánh giá</span>
@@ -1044,11 +1055,60 @@ async function resendOtp() {
   }
 }
 
-function finishLogin(res) {
+// ============================================================
+// CHUYỂN ĐƠN VỊ (người làm việc ở nhiều đơn vị) — không cần đăng xuất
+// ============================================================
+const ROLE_SUFFIX = { manager: ' (Trưởng đơn vị)', hr: ' (Tổ chức cán bộ)', staff: '' };
+function showSwitchUnit() {
+  closeSidebar();
+  const u = state.user;
+  let modal = document.getElementById('switch-unit-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'switch-unit-modal';
+    modal.className = 'modal-backdrop';
+    document.body.appendChild(modal);
+  }
+  const list = (state.units || []).map((d, i) => {
+    const cur = d.donVi === u.donVi && d.role === u.role;
+    return `<button class="unit-choice${cur ? ' current' : ''}" ${cur ? 'disabled' : `onclick="doSwitchUnit(${i}, this)"`}>
+      ${cur ? '✅ ' : '🏢 '}${esc(d.donVi)}${ROLE_SUFFIX[d.role] || ''}<small>${cur ? 'Đang làm việc' : 'Bấm để chuyển sang'}</small></button>`;
+  }).join('');
+  modal.innerHTML = `<div class="modal-box" style="text-align:left;">
+    <h3 style="color:var(--navy);margin:0 0 6px;font-size:1.05rem;text-align:center;">🔄 Chuyển đơn vị</h3>
+    <p style="color:var(--gray-600);font-size:13px;margin-bottom:14px;text-align:center;">Chọn đơn vị muốn thao tác. Mỗi đơn vị đánh giá riêng.</p>
+    ${list}
+    <button class="btn btn-gray" onclick="document.getElementById('switch-unit-modal').classList.add('hidden')">Đóng</button>
+  </div>`;
+  modal.classList.remove('hidden');
+}
+
+async function doSwitchUnit(i, btn) {
+  const d = state.units[i];
+  if (!d) return;
+  document.querySelectorAll('#switch-unit-modal .unit-choice').forEach(b => { b.disabled = true; });
+  btn.innerHTML = '⏳ Đang chuyển sang ' + esc(d.donVi) + '...';
+  try {
+    const res = await api('switchUnit', { donVi: d.donVi, role: d.role, device: await getDeviceInfo() });
+    saveSession(res);
+    location.reload();   // tải lại để mọi trang, tháng đã chọn, bộ nhớ tạm… về đúng đơn vị mới
+  } catch (e) {
+    showError(e);
+    showSwitchUnit();
+  }
+}
+
+function saveSession(res) {
   state.token = res.token;
   state.user = res.user;
+  state.units = res.units || state.units || [];
   store.set('vcnld_token', res.token);
   store.set('vcnld_user', JSON.stringify(res.user));
+  store.set('vcnld_units', JSON.stringify(state.units));
+}
+
+function finishLogin(res) {
+  saveSession(res);
   document.getElementById('cccd_input').value = '';
   enterApp();
 }
@@ -1064,6 +1124,9 @@ function enterApp() {
   document.getElementById('dsp-name').textContent = u.hoTen;
   document.getElementById('dsp-unit').textContent = u.donVi;
   document.getElementById('mgr-unit-info').textContent = u.donVi;
+  const multi = (state.units || []).length > 1;
+  document.getElementById('btn-switch-unit').classList.toggle('hidden', !multi);
+  document.getElementById('lnk-switch-unit').classList.toggle('hidden', !multi);
   buildNav(u.role);
   showPage(DEFAULT_PAGE[u.role]);
   getHistory().catch(() => {});   // tải trước để chọn tháng hiện kết quả ngay
@@ -1072,6 +1135,7 @@ function enterApp() {
 function logout() {
   store.del('vcnld_token');
   store.del('vcnld_user');
+  store.del('vcnld_units');
   location.reload();
 }
 
@@ -1100,7 +1164,7 @@ function getHistory(force) {
 function markSubmitted(month, score, grade) {
   if (!cache.history) return;
   cache.history = [{ thang: month, donVi: state.user.donVi, tongDiem: score, xepLoai: grade, sepLoai: '' }]
-    .concat(cache.history.filter(r => r.thang !== month));
+    .concat(cache.history.filter(r => !(r.thang === month && r.donVi === state.user.donVi)));
   cache.historyAt = Date.now();
 }
 
@@ -1127,10 +1191,10 @@ async function onHomeMonth(month) {
   if (!cache.history) setStatus(msg, 'checking', '🔍 Đang kiểm tra...');
   try {
     let done;
-    try { done = (await getHistory()).some(r => r.thang === month); }
+    try { done = (await getHistory()).some(r => r.thang === month && r.donVi === state.user.donVi); }
     catch (e) { done = await api('checkDoubleEntry', { month }); }   // dự phòng
     if (!isLatest('home', n)) return;
-    if (done) setStatus(msg, 'done', `❌ Bạn đã gửi đánh giá tháng ${monthLabel(month)} rồi!`);
+    if (done) setStatus(msg, 'done', `❌ Bạn đã gửi đánh giá tháng ${monthLabel(month)}${(state.units || []).length > 1 ? ' tại ' + esc(state.user.donVi) : ''} rồi!`);
     else { setStatus(msg, 'ready', `✅ Bạn chưa đánh giá tháng ${monthLabel(month)}. Mời bạn bắt đầu.`); btn.classList.remove('hidden'); }
   } catch (e) {
     if (isLatest('home', n)) setStatus(msg, 'warn', '⚠️ ' + esc(e.message));
@@ -2000,7 +2064,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const token = store.get('vcnld_token'), user = store.get('vcnld_user');
   if (token && user) {
-    try { state.token = token; state.user = JSON.parse(user); enterApp(); }
+    try {
+      state.token = token; state.user = JSON.parse(user);
+      try { state.units = JSON.parse(store.get('vcnld_units') || '[]'); } catch (e) { state.units = []; }
+      enterApp();
+    }
     catch (e) { logout(); }
   }
 });
