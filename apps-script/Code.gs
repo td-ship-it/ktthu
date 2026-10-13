@@ -95,7 +95,8 @@ const ROUTES = {
   getAllStaffData:          { auth: "hr",      fn: getAllStaffData_ },
   exportReport:             { auth: "hr",      fn: exportReport_ },
   exportCSVData:            { auth: "hr",      fn: exportCSVData_ },
-  exportExcelData:          { auth: "hr",      fn: exportExcelData_ }
+  exportExcelData:          { auth: "hr",      fn: exportExcelData_ },
+  getExportTCCB:            { auth: "hr",      fn: getExportTCCB_ }
 };
 
 // ============================================================
@@ -1113,6 +1114,57 @@ function buildReportSheet_(month) {
   SpreadsheetApp.flush();
 
   return { sheet: report, sheetName: sheetName, total: data.length, url: ss.getUrl() + "#gid=" + report.getSheetId(), data: data };
+}
+
+// ============================================================
+// BẢNG TỔNG HỢP CHI THU NHẬP TĂNG THÊM (mẫu Phòng TCCB) — dữ liệu cho trang web dựng file .xlsx
+// Bổ sung Chức danh (cột CD/CV) và Đơn vị lớn (cột "ĐƠN VỊ") từ DanhSachNhanSu.
+// ============================================================
+function normHeader_(h) {
+  return str_(h).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "D")
+    .toUpperCase().replace(/\s+/g, " ").trim();
+}
+
+function staffInfoMap_() {
+  const data = getSheet_(SHEET_NHANSU).getDataRange().getValues();
+  const raw = data[0].map(str_);
+  const h = raw.map(normHeader_);
+  const iM = raw.indexOf("MSNV"), iD = raw.indexOf("DonVi");
+  const iC = h.findIndex(x => /^(CD\s*\/\s*CV|CHUC DANH|CHUC VU)/.test(x));
+  const iU = h.findIndex((x, i) => i !== iD && /^(DON VI|DON VI LON|DON VI QUAN LY|KHOI)$/.test(x));
+  const map = {};
+  for (let i = 1; i < data.length; i++) {
+    const id = normalizeId_(data[i][iM]);
+    if (!id) continue;
+    const info = { chucDanh: iC >= 0 ? str_(data[i][iC]) : "", donViLon: iU >= 0 ? str_(data[i][iU]) : "" };
+    map[id + "|" + str_(data[i][iD])] = info;
+    if (!map[id]) map[id] = info;
+  }
+  return map;
+}
+
+function getExportTCCB_(args) {
+  const month = requireMonth_(args.month);
+  const v2 = isV2Month_(month);
+  const list = listAll_(month);
+  const info = staffInfoMap_();
+  const rows = list.map(it => {
+    const id = normalizeId_(it.msnv);
+    const inf = info[id + "|" + it.donVi] || info[id] || { chucDanh: "", donViLon: "" };
+    let yKien;
+    if (v2) {
+      yKien = [it.canCuVuot, it.moTaThuong ? "Cách làm hay (đề xuất thưởng " + it.thuong + "đ): " + it.moTaThuong : ""]
+        .filter(Boolean).join("\n");
+    } else {
+      yKien = str_(it.chiTiet[16]);
+    }
+    return {
+      msnv: it.msnv, hoTen: it.hoTen, chucDanh: inf.chucDanh, boMon: it.donVi, donViLon: inf.donViLon,
+      tongDiem: it.tongDiem, xepLoai: it.xepLoai, yKien: yKien,
+      sepDiem: it.sepDiem, sepLoai: it.sepLoai, sepGhiChu: it.sepGhiChu
+    };
+  });
+  return { month: month, rows: rows };
 }
 
 function exportCSVData_(args) {

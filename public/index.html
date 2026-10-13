@@ -149,7 +149,7 @@
     .login-logo .sub { font-size: 0.75rem; color: var(--gray-400); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
     .form-group { margin-bottom: 16px; }
     .form-group label, .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
-    input[type="password"], input[type="text"], input[type="number"], select, textarea {
+    input[type="password"], input[type="text"], input[type="number"], input[type="date"], select, textarea {
       width: 100%; padding: 13px 14px; border: 1.5px solid var(--gray-200);
       border-radius: var(--radius-sm); font-size: 16px; font-family: inherit;
       color: var(--gray-800); background: var(--white);
@@ -1997,7 +1997,8 @@ function renderHRDashboard(data, month) {
       <button class="btn btn-success" id="hr-export-btn" onclick="exportToSheet()">📊 Xuất Google Sheets</button>
       <button class="btn btn-primary" id="hr-export-excel-btn" onclick="exportToExcel()">📗 Xuất Excel (.xlsx)</button>
       <button class="btn btn-gray" id="hr-export-csv-btn" onclick="exportToCSV()">📄 Xuất CSV</button>
-    </div>`;
+    </div>
+    <button class="btn btn-primary" id="hr-export-tccb-btn" onclick="showTCCBExport()" style="margin-top:12px;max-width:640px;background:#0f2557;">🏛️ Bảng tổng hợp chi thu nhập tăng thêm (mẫu TCCB, .xlsx)</button>`;
 }
 
 function renderHRDetail(data) {
@@ -2045,6 +2046,222 @@ function exportToExcel() {
 function exportToCSV() {
   runExport('hr-export-csv-btn', 'exportCSVData', res => downloadBase64(res.base64, res.fileName, 'text/csv;charset=utf-8'));
 }
+
+// ============================================================
+// BẢNG TỔNG HỢP CHI THU NHẬP TĂNG THÊM — xuất .xlsx đúng mẫu Phòng TCCB
+// Dữ liệu lấy từ máy chủ (getExportTCCB), file dựng ngay trên trình duyệt bằng ExcelJS.
+// ============================================================
+const EXCELJS_SRC = [
+  'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+  'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js'
+];
+const TCCB_DEFAULTS = { phoTP: 'Lâm Quốc Việt', hieuTruong: 'Trần Diệp Tuấn', scope: 'A' };
+
+function loadScript(src) {
+  return new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = ok; s.onerror = () => { s.remove(); fail(new Error('load ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+async function ensureExcelJS() {
+  if (window.ExcelJS) return;
+  for (const src of EXCELJS_SRC) {
+    try { await loadScript(src); if (window.ExcelJS) return; } catch (e) { /* thử nguồn khác */ }
+  }
+  throw new Error('Không tải được thư viện tạo Excel. Vui lòng kiểm tra mạng và thử lại.');
+}
+
+function tccbPrefs() {
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem('tccb_export') || '{}'); } catch (e) {}
+  return Object.assign({}, TCCB_DEFAULTS, { nguoiLap: state.user ? state.user.hoTen : '' }, p);
+}
+function todayISO() {
+  const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+
+function showTCCBExport() {
+  if (!state.hrMonth) return alert('Vui lòng chọn tháng trước!');
+  const p = tccbPrefs();
+  let modal = document.getElementById('tccb-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'tccb-modal';
+    modal.className = 'modal-backdrop';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `<div class="modal-box" style="text-align:left;max-width:460px;">
+    <h3 style="color:var(--navy);margin:0 0 4px;font-size:1.05rem;text-align:center;">🏛️ Bảng tổng hợp chi thu nhập tăng thêm</h3>
+    <p style="color:var(--gray-600);font-size:13px;margin-bottom:14px;text-align:center;">Tháng <b>${esc(monthLabel(state.hrMonth))}</b> · đúng mẫu Phòng TCCB (.xlsx)</p>
+    <label class="form-label" for="tccb-scope">Danh sách gồm</label>
+    <select id="tccb-scope" style="margin-bottom:12px;">
+      <option value="A"${p.scope === 'A' ? ' selected' : ''}>Mức A — người được TĐV xếp A+ hoặc A</option>
+      <option value="all"${p.scope === 'all' ? ' selected' : ''}>Tất cả người đã nộp phiếu</option>
+    </select>
+    <label class="form-label" for="tccb-date">Ngày lập bảng</label>
+    <input type="date" id="tccb-date" value="${todayISO()}" style="margin-bottom:12px;">
+    <label class="form-label" for="tccb-lap">Người lập bảng</label>
+    <input type="text" id="tccb-lap" value="${esc(p.nguoiLap)}" style="margin-bottom:12px;">
+    <label class="form-label" for="tccb-tp">Phòng TCCB (KT. Trưởng phòng – Phó Trưởng phòng)</label>
+    <input type="text" id="tccb-tp" value="${esc(p.phoTP)}" style="margin-bottom:12px;">
+    <label class="form-label" for="tccb-ht">Hiệu trưởng</label>
+    <input type="text" id="tccb-ht" value="${esc(p.hieuTruong)}" style="margin-bottom:16px;">
+    <div id="tccb-status" class="status-msg"></div>
+    <button class="btn btn-primary" id="btn-tccb-go" onclick="runTCCBExport()">📥 Tải file Excel</button>
+    <button class="btn btn-gray" onclick="document.getElementById('tccb-modal').classList.add('hidden')">Đóng</button>
+  </div>`;
+  modal.classList.remove('hidden');
+}
+
+async function runTCCBExport() {
+  const opts = {
+    scope: document.getElementById('tccb-scope').value,
+    date: document.getElementById('tccb-date').value || todayISO(),
+    nguoiLap: document.getElementById('tccb-lap').value.trim(),
+    phoTP: document.getElementById('tccb-tp').value.trim(),
+    hieuTruong: document.getElementById('tccb-ht').value.trim()
+  };
+  try { localStorage.setItem('tccb_export', JSON.stringify({ scope: opts.scope, nguoiLap: opts.nguoiLap, phoTP: opts.phoTP, hieuTruong: opts.hieuTruong })); } catch (e) {}
+  const btn = document.getElementById('btn-tccb-go');
+  const st = document.getElementById('tccb-status');
+  setBusy(btn, true, '⏳ Đang tạo file...');
+  setStatus(st, '', '');
+  try {
+    const [data] = await Promise.all([api('getExportTCCB', { month: state.hrMonth }), ensureExcelJS()]);
+    const r = buildTCCBWorkbook(data, opts);
+    if (!r.count) {
+      setStatus(st, 'warn', opts.scope === 'A'
+        ? `⚠️ Chưa có ai được Trưởng đơn vị xếp A+/A trong tháng ${esc(monthLabel(data.month))}${r.pending ? ` (${r.pending} phiếu chờ TĐV đánh giá)` : ''}.`
+        : `⚠️ Không có dữ liệu tháng ${esc(monthLabel(data.month))}.`);
+      return;
+    }
+    const buf = await r.wb.xlsx.writeBuffer();
+    const url = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = r.fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    setStatus(st, 'ready', `✅ Đã tạo file: ${r.count} người` +
+      (r.pending ? ` · ⚠️ ${r.pending} phiếu chưa được TĐV đánh giá nên chưa có trong danh sách` : ''));
+  } catch (e) {
+    setStatus(st, 'done', '⚠️ ' + esc(e.message));
+  } finally {
+    setBusy(btn, false);
+  }
+}
+
+/** Dựng workbook theo đúng bố cục mẫu "Ket_qua_danh_gia_T9.2026.xlsx" */
+function buildTCCBWorkbook(data, opts) {
+  const [mm, yyyy] = data.month.split('-');
+  const m = Number(mm);
+  const all = data.rows || [];
+  const pending = all.filter(r => !r.sepLoai).length;
+  const rows = all.filter(r => opts.scope === 'all' ? true : (r.sepLoai === 'A+' || r.sepLoai === 'A'));
+  const coll = new Intl.Collator('vi');
+  const groups = {};
+  rows.forEach(r => { const g = r.donViLon || 'Chưa xác định đơn vị'; (groups[g] = groups[g] || []).push(r); });
+  const gNames = Object.keys(groups).sort(coll.compare);
+  gNames.forEach(g => groups[g].sort((a, b) => coll.compare(a.boMon, b.boMon) || coll.compare(a.hoTen, b.hoTen)));
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Hệ thống đánh giá VC-NLĐ';
+  const ws = wb.addWorksheet(`T${m}.${yyyy.slice(2)}`, {
+    pageSetup: { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+                 horizontalCentered: true, printTitlesRow: '4:4',
+                 margins: { left: 0.25, right: 0.25, top: 0.71, bottom: 0.5, header: 0.3, footer: 0.3 } }
+  });
+  ws.columns = [5.43, 17.43, 24.71, 15, 23.43, 29, 20.71, 12, 14.71, 31.71, 13, 14.71, 31, 12.29].map(w => ({ width: w }));
+
+  const TNR = (sz, extra) => Object.assign({ name: 'Times New Roman', size: sz }, extra || {});
+  const thin = { style: 'thin' };
+  const box = { top: thin, left: thin, bottom: thin, right: thin };
+  const center = { horizontal: 'center', vertical: 'middle', wrapText: true };
+
+  // Dòng 1: tên cơ quan + quốc hiệu, ngày lập
+  ws.mergeCells('A1:E1'); ws.mergeCells('F1:N1'); ws.mergeCells('F2:N2');
+  const [y, mo, d] = opts.date.split('-');
+  ws.getCell('A1').value = { richText: [
+    { text: 'BỘ Y TẾ\n', font: TNR(14) },
+    { text: 'ĐẠI HỌC Y DƯỢC \nTHÀNH PHỐ HỒ CHÍ MINH', font: TNR(14, { bold: true }) }
+  ] };
+  ws.getCell('F1').value = { richText: [
+    { text: 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n', font: TNR(14, { bold: true }) },
+    { text: '\n', font: TNR(14) },
+    { text: `Thành phố Hồ Chí Minh, ngày ${d} tháng ${mo} năm ${y}`, font: TNR(14, { italic: true }) }
+  ] };
+  ['A1', 'F1', 'F2'].forEach(c => { ws.getCell(c).alignment = center; ws.getCell(c).font = TNR(14); });
+  ws.getRow(1).height = 71.25;
+  ws.getRow(2).height = 14.25;
+
+  // Dòng 3: tiêu đề
+  ws.mergeCells('A3:N3');
+  const title = opts.scope === 'all' ? 'BẢNG TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ HIỆU QUẢ CÔNG VIỆC' : 'BẢNG TỔNG HỢP CHI THU NHẬP TĂNG THÊM MỨC A';
+  const t3 = ws.getCell('A3');
+  t3.value = `${title}\nDựa trên kết quả đánh giá viên chức người lao động Khối hành chính, phục vụ, hỗ trợ\nTháng ${m} năm ${yyyy}`;
+  t3.font = TNR(16, { bold: true }); t3.alignment = center; t3.border = { bottom: thin };
+  ws.getRow(3).height = 80.25;
+
+  // Dòng 4: tiêu đề cột
+  const heads = ['STT', 'MANV', 'Họ và tên', 'CCCD', 'Chức danh', 'Bộ môn', 'Đơn vị', 'Điểm tự đánh giá', 'Tự đánh giá',
+                 'Ý kiến của cá nhân', 'Điểm Trưởng ĐV phê duyệt', 'Trưởng ĐV phê duyệt', 'Ý kiến của Trưởng đơn vị', 'Hiệu trưởng \nphê duyệt'];
+  const hr = ws.getRow(4);
+  heads.forEach((h, i) => { const c = hr.getCell(i + 1); c.value = h; c.font = TNR(12, { bold: true }); c.alignment = center; c.border = box; });
+  hr.height = 47.25;
+
+  // Ước lượng chiều cao dòng theo độ dài chữ ở các cột hẹp
+  const lines = (txt, width) => String(txt || '').split('\n')
+    .reduce((n, part) => n + Math.max(1, Math.ceil(part.length / Math.max(1, width * 0.9))), 0);
+  const num = v => (v === '' || v === null || v === undefined) ? null : Number(v);
+
+  let r = 5, stt = 0;
+  gNames.forEach(g => {
+    const row = ws.getRow(r);
+    for (let c = 1; c <= 14; c++) row.getCell(c).border = box;
+    const gc = row.getCell(1);
+    gc.value = g; gc.font = TNR(12, { bold: true }); gc.alignment = { horizontal: 'left', vertical: 'top' };
+    row.height = 27.75;
+    r++;
+    groups[g].forEach(it => {
+      stt++;
+      const row = ws.getRow(r);
+      const vals = [stt, String(it.msnv || ''), it.hoTen, { formula: `B${r}`, result: String(it.msnv || '') }, it.chucDanh, it.boMon, it.donViLon,
+                    num(it.tongDiem), it.xepLoai, it.yKien || null, num(it.sepDiem), it.sepLoai, it.sepGhiChu || null, it.sepLoai];
+      vals.forEach((v, i) => {
+        const c = row.getCell(i + 1);
+        c.value = v;
+        c.font = TNR(12);
+        c.border = box;
+        const centered = [7, 8, 10, 11, 13].includes(i);
+        c.alignment = { horizontal: centered ? 'center' : 'left', vertical: 'top', wrapText: true };
+      });
+      row.getCell(2).numFmt = '@';
+      row.getCell(4).numFmt = '@';
+      const n = Math.max(2, lines(it.yKien, 31.7), lines(it.sepGhiChu, 31), lines(it.hoTen, 24.7), lines(it.chucDanh, 23.4), lines(it.boMon, 29));
+      row.height = Math.min(409, Math.max(31.5, n * 16 + 4));
+      r++;
+    });
+  });
+
+  // Chữ ký
+  const sig = (row, height, a, g, l) => {
+    ws.mergeCells(`C${row}:E${row}`); ws.mergeCells(`G${row}:J${row}`); ws.mergeCells(`L${row}:N${row}`);
+    [['C', a], ['G', g], ['L', l]].forEach(([col, v]) => {
+      const c = ws.getCell(`${col}${row}`);
+      c.value = v; c.font = TNR(14, { bold: true }); c.alignment = center;
+    });
+    ws.getRow(row).height = height;
+  };
+  sig(r, 83.25, 'NGƯỜI LẬP BẢNG', 'PHÒNG TỔ CHỨC CÁN BỘ\nKT. TRƯỞNG PHÒNG\nPHÓ TRƯỞNG PHÒNG', 'HIỆU TRƯỞNG');
+  for (let k = 1; k <= 4; k++) ws.getRow(r + k).height = 18.75;
+  sig(r + 5, 18.75, opts.nguoiLap, opts.phoTP, opts.hieuTruong);
+
+  const fileName = (opts.scope === 'all' ? 'Bang_tong_hop_ket_qua_danh_gia_' : 'Bang_tong_hop_thu_nhap_tang_them_') + `T${m}.${yyyy}.xlsx`;
+  return { wb, fileName, count: stt, pending };
+}
+
 
 // ============================================================
 // KHỞI ĐỘNG

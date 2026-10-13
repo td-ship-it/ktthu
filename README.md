@@ -99,6 +99,14 @@ Từ **tháng đánh giá 10/2026** app dùng phiếu *"Tiêu chí đánh giá h
 - **Trưởng đơn vị** nhập *Thưởng công nhận* (0 → mức đề xuất; để trống = công nhận đúng đề xuất); Điểm TĐV và xếp loại tự tính lại, vẫn sửa tay được.
 - **Dữ liệu** lưu ở sheet `DuLieuDanhGia_KPI` (tự tạo khi có phiếu đầu tiên); sheet `DuLieuDanhGia` cũ giữ nguyên. Lịch sử cá nhân hiện cả hai; báo cáo/xuất Excel/CSV tháng nào theo mẫu tháng đó. (Sheet `DuLieuDanhGia_V2` nếu có là dữ liệu thử của bản nháp — xóa được.)
 
+## Bảng tổng hợp chi thu nhập tăng thêm (HR)
+
+Trang **Dashboard** của HR có nút **🏛️ Bảng tổng hợp chi thu nhập tăng thêm (mẫu TCCB, .xlsx)**: chọn tháng → bấm nút → chọn phạm vi, ngày lập, tên người ký → tải file Excel **đúng mẫu** "Kết quả đánh giá T9.2026" (quốc hiệu, tiêu đề theo tháng, 14 cột, nhóm theo Đơn vị, khối chữ ký, khổ ngang A4, lặp tiêu đề cột khi in).
+
+- **Danh sách:** mặc định *Mức A* = người được Trưởng đơn vị xếp **A+ hoặc A**; hoặc chọn *Tất cả người đã nộp*. Phiếu chưa được TĐV đánh giá không vào danh sách mức A (có thông báo số lượng).
+- **Nguồn cột:** Chức danh ← cột `CD/CV`, Bộ môn ← cột `DonVi`, Đơn vị ← cột `ĐƠN VỊ` của `DanhSachNhanSu`; *Hiệu trưởng phê duyệt* điền sẵn bằng xếp loại của TĐV (sửa tay trong file nếu khác). *Ý kiến của cá nhân* = căn cứ vượt mức (A+) và mô tả cách làm hay (nếu có đề xuất thưởng).
+- File được tạo ngay trên trình duyệt (thư viện ExcelJS tải từ CDN khi bấm nút); tên người ký được nhớ cho lần sau.
+
 ## Người làm việc ở nhiều đơn vị
 
 - Mỗi **đơn vị đánh giá riêng**: kiểm tra "đã gửi" theo *mã số + đơn vị + tháng* (gửi ở đơn vị A vẫn gửi được ở đơn vị B; gửi lại ở A thì bị chặn). Lịch sử cá nhân hiện cả hai đơn vị.
