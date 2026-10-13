@@ -105,7 +105,8 @@ Trang **Dashboard** của HR có nút **🏛️ Bảng tổng hợp chi thu nh�
 
 - **Danh sách:** mặc định *Mức A* = người được Trưởng đơn vị xếp **A+ hoặc A**; hoặc chọn *Tất cả người đã nộp*. Phiếu chưa được TĐV đánh giá không vào danh sách mức A (có thông báo số lượng).
 - **Nguồn cột:** Chức danh ← cột `CD/CV`, Bộ môn ← cột `DonVi`, Đơn vị ← cột `ĐƠN VỊ` của `DanhSachNhanSu`; *Hiệu trưởng phê duyệt* điền sẵn bằng xếp loại của TĐV (sửa tay trong file nếu khác). *Ý kiến của cá nhân* = căn cứ vượt mức (A+) và mô tả cách làm hay (nếu có đề xuất thưởng).
-- File được tạo ngay trên trình duyệt (thư viện ExcelJS tải từ CDN khi bấm nút); tên người ký được nhớ cho lần sau.
+- **Khối chữ ký:** mỗi người ký (Người lập bảng · Phòng TCCB · Hiệu trưởng) có ô chọn — bỏ chọn thì khối đó (chức danh + họ tên) không in ra file; bỏ cả ba thì file không có phần chữ ký.
+- File được tạo ngay trên trình duyệt (thư viện ExcelJS tải từ CDN khi bấm nút); tên người ký và các ô chọn được nhớ cho lần sau.
 
 ## Người làm việc ở nhiều đơn vị
 

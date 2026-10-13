@@ -86,6 +86,9 @@
       background: white; cursor: pointer; font-family: inherit; font-size: 14px; color: var(--gray-800); }
     .unit-choice:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-light); }
     .unit-choice.current { border-color: var(--success); background: #f0fdf4; cursor: default; }
+    .sig-check { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--gray-800); margin-bottom: 6px; cursor: pointer; }
+    .sig-check input { width: 16px; height: 16px; accent-color: var(--primary); }
+    #tccb-modal input[type="text"]:disabled { background: var(--gray-100); color: var(--gray-400); }
     .unit-choice small { display: block; color: var(--gray-400); font-size: 12px; margin-top: 2px; }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
     .sidebar-overlay.show { display: block; }
@@ -2055,7 +2058,7 @@ const EXCELJS_SRC = [
   'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
   'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js'
 ];
-const TCCB_DEFAULTS = { phoTP: 'Lâm Quốc Việt', hieuTruong: 'Trần Diệp Tuấn', scope: 'A' };
+const TCCB_DEFAULTS = { phoTP: 'Lâm Quốc Việt', hieuTruong: 'Trần Diệp Tuấn', scope: 'A', lapOn: true, tpOn: true, htOn: true };
 
 function loadScript(src) {
   return new Promise((ok, fail) => {
@@ -2103,12 +2106,12 @@ function showTCCBExport() {
     </select>
     <label class="form-label" for="tccb-date">Ngày lập bảng</label>
     <input type="date" id="tccb-date" value="${todayISO()}" style="margin-bottom:12px;">
-    <label class="form-label" for="tccb-lap">Người lập bảng</label>
-    <input type="text" id="tccb-lap" value="${esc(p.nguoiLap)}" style="margin-bottom:12px;">
-    <label class="form-label" for="tccb-tp">Phòng TCCB (KT. Trưởng phòng – Phó Trưởng phòng)</label>
-    <input type="text" id="tccb-tp" value="${esc(p.phoTP)}" style="margin-bottom:12px;">
-    <label class="form-label" for="tccb-ht">Hiệu trưởng</label>
-    <input type="text" id="tccb-ht" value="${esc(p.hieuTruong)}" style="margin-bottom:16px;">
+    <div class="sub-title" style="margin:4px 0 8px;">Khối chữ ký <span style="text-transform:none;font-weight:500;color:var(--gray-400);">(bỏ chọn để không in khối đó)</span></div>
+    ${[['lap', 'Người lập bảng', p.nguoiLap, p.lapOn],
+       ['tp', 'Phòng TCCB (KT. Trưởng phòng – Phó Trưởng phòng)', p.phoTP, p.tpOn],
+       ['ht', 'Hiệu trưởng', p.hieuTruong, p.htOn]].map(([k, label, val, on]) => `
+    <label class="sig-check"><input type="checkbox" id="tccb-${k}-on"${on ? ' checked' : ''} onchange="document.getElementById('tccb-${k}').disabled = !this.checked"> ${label}</label>
+    <input type="text" id="tccb-${k}" value="${esc(val)}"${on ? '' : ' disabled'} style="margin-bottom:12px;">`).join('')}
     <div id="tccb-status" class="status-msg"></div>
     <button class="btn btn-primary" id="btn-tccb-go" onclick="runTCCBExport()">📥 Tải file Excel</button>
     <button class="btn btn-gray" onclick="document.getElementById('tccb-modal').classList.add('hidden')">Đóng</button>
@@ -2122,9 +2125,15 @@ async function runTCCBExport() {
     date: document.getElementById('tccb-date').value || todayISO(),
     nguoiLap: document.getElementById('tccb-lap').value.trim(),
     phoTP: document.getElementById('tccb-tp').value.trim(),
-    hieuTruong: document.getElementById('tccb-ht').value.trim()
+    hieuTruong: document.getElementById('tccb-ht').value.trim(),
+    lapOn: document.getElementById('tccb-lap-on').checked,
+    tpOn: document.getElementById('tccb-tp-on').checked,
+    htOn: document.getElementById('tccb-ht-on').checked
   };
-  try { localStorage.setItem('tccb_export', JSON.stringify({ scope: opts.scope, nguoiLap: opts.nguoiLap, phoTP: opts.phoTP, hieuTruong: opts.hieuTruong })); } catch (e) {}
+  try {
+    localStorage.setItem('tccb_export', JSON.stringify({ scope: opts.scope, nguoiLap: opts.nguoiLap, phoTP: opts.phoTP, hieuTruong: opts.hieuTruong,
+                                                          lapOn: opts.lapOn, tpOn: opts.tpOn, htOn: opts.htOn }));
+  } catch (e) {}
   const btn = document.getElementById('btn-tccb-go');
   const st = document.getElementById('tccb-status');
   setBusy(btn, true, '⏳ Đang tạo file...');
@@ -2245,18 +2254,26 @@ function buildTCCBWorkbook(data, opts) {
     });
   });
 
-  // Chữ ký
-  const sig = (row, height, a, g, l) => {
-    ws.mergeCells(`C${row}:E${row}`); ws.mergeCells(`G${row}:J${row}`); ws.mergeCells(`L${row}:N${row}`);
-    [['C', a], ['G', g], ['L', l]].forEach(([col, v]) => {
-      const c = ws.getCell(`${col}${row}`);
-      c.value = v; c.font = TNR(14, { bold: true }); c.alignment = center;
-    });
-    ws.getRow(row).height = height;
-  };
-  sig(r, 83.25, 'NGƯỜI LẬP BẢNG', 'PHÒNG TỔ CHỨC CÁN BỘ\nKT. TRƯỞNG PHÒNG\nPHÓ TRƯỞNG PHÒNG', 'HIỆU TRƯỞNG');
-  for (let k = 1; k <= 4; k++) ws.getRow(r + k).height = 18.75;
-  sig(r + 5, 18.75, opts.nguoiLap, opts.phoTP, opts.hieuTruong);
+  // Chữ ký — chỉ in các khối được chọn (vị trí giữ nguyên như mẫu)
+  const blocks = [
+    { on: opts.lapOn !== false, cols: 'C:E', title: 'NGƯỜI LẬP BẢNG', name: opts.nguoiLap },
+    { on: opts.tpOn !== false,  cols: 'G:J', title: 'PHÒNG TỔ CHỨC CÁN BỘ\nKT. TRƯỞNG PHÒNG\nPHÓ TRƯỞNG PHÒNG', name: opts.phoTP },
+    { on: opts.htOn !== false,  cols: 'L:N', title: 'HIỆU TRƯỞNG', name: opts.hieuTruong }
+  ].filter(b => b.on);
+  if (blocks.length) {
+    const sig = (row, height, key) => {
+      blocks.forEach(b => {
+        const [c1, c2] = b.cols.split(':');
+        ws.mergeCells(`${c1}${row}:${c2}${row}`);
+        const c = ws.getCell(`${c1}${row}`);
+        c.value = b[key] || null; c.font = TNR(14, { bold: true }); c.alignment = center;
+      });
+      ws.getRow(row).height = height;
+    };
+    sig(r, 83.25, 'title');
+    for (let k = 1; k <= 4; k++) ws.getRow(r + k).height = 18.75;
+    sig(r + 5, 18.75, 'name');
+  }
 
   const fileName = (opts.scope === 'all' ? 'Bang_tong_hop_ket_qua_danh_gia_' : 'Bang_tong_hop_thu_nhap_tang_them_') + `T${m}.${yyyy}.xlsx`;
   return { wb, fileName, count: stt, pending };
