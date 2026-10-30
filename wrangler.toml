@@ -1,9 +1,8 @@
-# Tên phải TRÙNG với tên Worker bạn đã tạo trên Cloudflare, nếu không bản build sẽ báo lỗi.
-name = "ktthu"
+name = "danhgia"
 main = "src/worker.js"
 compatibility_date = "2026-09-01"
 
-# Giữ nguyên các biến đã đặt trên dashboard mỗi lần deploy
+# Giữ nguyên các biến (APPS_SCRIPT_URL, PROXY_KEY) đã đặt trên dashboard mỗi lần deploy
 keep_vars = true
 
 [assets]
@@ -11,6 +10,7 @@ directory = "./public"
 binding = "ASSETS"
 run_worker_first = ["/api"]
 
-# Giữ Apps Script luôn "ấm": cứ 5 phút gọi nhẹ 1 lần, 7h00–18h59 giờ Việt Nam (0h–11h UTC)
+# Không có lịch riêng: gói Cloudflare miễn phí chỉ cho 5 lịch (Cron) cho cả tài khoản.
+# Worker "tccb" sẽ đánh thức Apps Script của Worker này. Dòng dưới xóa lịch cũ (nếu có).
 [triggers]
-crons = ["*/5 0-11 * * *"]
+crons = []

@@ -90,6 +90,17 @@
     .sig-check input { width: 16px; height: 16px; accent-color: var(--primary); }
     #tccb-modal input[type="text"]:disabled { background: var(--gray-100); color: var(--gray-400); }
     .unit-choice small { display: block; color: var(--gray-400); font-size: 12px; margin-top: 2px; }
+    .loai-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 9px; font-size: 10.5px; font-weight: 700; vertical-align: middle; white-space: nowrap; }
+    .loai-tag.gv { background: #e0e7ff; color: #3730a3; }
+    .loai-tag.htpv { background: #fef3c7; color: #92400e; }
+    .my-slots { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--gray-200); }
+    .my-slots-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .slot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 11px; margin-bottom: 6px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 13px; }
+    .slot-row.done { background: #f0fdf4; border-color: #bbf7d0; }
+    .slot-row.todo { background: #fffbeb; border-color: #fde68a; }
+    .slot-row small { display: block; color: var(--gray-600); font-size: 11.5px; margin-top: 1px; }
+    .slot-row button { flex: none; padding: 5px 10px; font-size: 12px; font-weight: 600; font-family: inherit; color: var(--primary); background: #fff; border: 1.5px solid var(--primary); border-radius: 6px; cursor: pointer; }
+    .slot-row .slot-cur { flex: none; font-size: 12px; font-weight: 600; color: var(--success); }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
     .sidebar-overlay.show { display: block; }
     .main-area { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; min-width: 0; }
@@ -315,7 +326,7 @@
       <div class="login-logo">
         <img src="https://lh3.googleusercontent.com/d/1O9wKINWz8OJdXAEOzr2q4Lk6OHdTS7Sl" alt="Logo">
         <h1>PHIẾU TỰ ĐÁNH GIÁ VC-NLĐ<br>ĐẠI HỌC Y DƯỢC TP. HỒ CHÍ MINH</h1>
-        <div class="sub">Nhóm hành chính, hỗ trợ, phục vụ</div>
+        <div class="sub">Giảng viên, nghiên cứu viên, trợ giảng · Hành chính, hỗ trợ, phục vụ</div>
       </div>
       <form id="login-form" autocomplete="off" onsubmit="handleVerify(event)">
         <div class="form-group">
@@ -382,6 +393,7 @@
           </div>
           <div id="status-msg" class="status-msg"></div>
           <button id="btn-start" class="btn btn-success hidden" onclick="startEvaluation()">✅ BẮT ĐẦU ĐÁNH GIÁ</button>
+          <div id="my-slots" class="my-slots hidden"></div>
         </div>
       </div>
 
@@ -587,7 +599,7 @@
             <button type="button" class="btn btn-gray" style="width:auto;padding:8px 16px;min-height:36px;font-size:13px;" onclick="backFromFormV2()">← Quay lại</button>
           </div>
 
-          <h2 style="text-align:center;color:var(--navy);font-size:1.02rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;line-height:1.5;">Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ khối hành chính, hỗ trợ, phục vụ</h2>
+          <h2 id="v2-title" style="text-align:center;color:var(--navy);font-size:1.02rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;line-height:1.5;"></h2>
           <div style="text-align:center;font-size:12px;color:var(--gray-400);margin-bottom:20px;"><span id="v2-name-display"></span> &nbsp;|&nbsp; Tháng <span id="v2-month-display"></span></div>
           <hr class="divider">
 
@@ -622,7 +634,7 @@
 
     <footer>
       <p><b>PHIẾU TỰ ĐÁNH GIÁ HIỆU QUẢ CÔNG VIỆC TRỰC TUYẾN</b></p>
-      <p>© 2026 Phòng Tổ chức cán bộ</p>
+      <p>© 2026 Phòng Tổ chức - Nhân sự · <span style="opacity:.6;">phiên bản 2026.10.30</span></p>
     </footer>
   </div>
 </div>
@@ -636,6 +648,14 @@ const SCORE_NAMES = ['diem_2_1','diem_2_2','diem_2_3','diem_2_4','diem_2_5','die
 const GRADES = ['A+','A','B','C'];
 const GRADE_COLORS = { 'A+':'#f59e0b', 'A':'#10b981', 'B':'#1a56db', 'C':'#ef4444' };
 const ROLE_LABEL = { hr:'Tổ chức cán bộ', manager:'Trưởng đơn vị', staff:'VC-NLĐ' };
+// Loại phiếu: GV = giảng viên, nghiên cứu viên, trợ giảng · HTPV = khối hành chính, hỗ trợ, phục vụ
+// Một vị trí đánh giá = (đơn vị + loại phiếu); người kiêm nhiệm có nhiều vị trí, mỗi vị trí một phiếu / tháng.
+const LOAI_LABEL = { GV: 'Giảng viên, NCV, trợ giảng', HTPV: 'Hỗ trợ, phục vụ' };
+const loaiOf = u => (u && u.loaiPhieu === 'GV') ? 'GV' : 'HTPV';
+const loaiTag = r => r && r.loaiPhieu ? `<span class="loai-tag ${r.loaiPhieu === 'GV' ? 'gv' : 'htpv'}">${r.loaiPhieu}</span>` : '';
+/** Dòng lịch sử r thuộc vị trí u? (phiếu cũ chưa phân loại: chỉ so đơn vị) */
+const slotMatch = (r, u) => r.donVi === u.donVi && (!r.loaiPhieu || r.loaiPhieu === loaiOf(u));
+const slotLabel = d => d.donVi + ({ manager: ' (Trưởng đơn vị)', hr: ' (Tổ chức cán bộ)' }[d.role] || '') + ' · ' + LOAI_LABEL[loaiOf(d)];
 
 const NAV = {
   staff: [
@@ -671,6 +691,21 @@ const PAGE_LABELS = {
   'page-hr-detail':    { title:'Chi tiết đơn vị', sub:'Danh sách VC-NLĐ theo đơn vị' }
 };
 
+const APP_VERSION = '2026.10.30';
+window.addEventListener('error', ev => showErrBanner(ev.message));
+window.addEventListener('unhandledrejection', ev => showErrBanner(ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason)));
+function showErrBanner(msg) {
+  if (!msg) return;
+  let b = document.getElementById('err-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'err-banner';
+    b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:100000;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.15);';
+    b.onclick = () => b.remove();
+    document.body.appendChild(b);
+  }
+  b.textContent = '⚠️ Lỗi trang (v' + APP_VERSION + '): ' + msg + ' — bấm để ẩn. Hãy tải lại trang (Ctrl+F5); nếu lặp lại, chụp màn hình gửi Phòng TC-NS.';
+}
 const state = { token:null, user:null, pendingMsnv:null, hrMonth:'', mgrMonth:'' };
 const reqSeq = {};   // chống kết quả trả về lộn thứ tự khi đổi tháng liên tục
 
@@ -706,20 +741,67 @@ function setBusy(btn, busy, busyText) {
 function setStatus(el, cls, html) { el.className = 'status-msg' + (cls ? ' ' + cls : ''); el.innerHTML = html || ''; }
 function showError(err) { if (!err || !err.handled) alert('⚠️ ' + (err && err.message ? err.message : err)); }
 
+// ------------------------------------------------------------
+// Kiểm tra dữ liệu máy chủ trả về + phiên bản Apps Script
+// ------------------------------------------------------------
+const API_REQUIRED = '2026.10.30';       // Code.gs phải có API_VERSION ≥ số này
+const isUser = u => !!u && typeof u === 'object' && typeof u.hoTen === 'string' && typeof u.role === 'string';
+const SHAPE = {
+  login:      d => !!d && (d.multiUnit ? Array.isArray(d.donViList) : d.otpRequired ? !!d.otpId : (!!d.token && isUser(d.user))),
+  verifyOtp:  d => !!d && !!d.token && isUser(d.user),
+  switchUnit: d => !!d && !!d.token && isUser(d.user),
+  resendOtp:  d => !!d && typeof d.expiresIn === 'number',
+  checkDoubleEntry: d => typeof d === 'boolean',
+  saveData:   d => !!d && d.grade !== undefined,
+  getUserHistory: Array.isArray,
+  getStaffData:   Array.isArray,
+  getAllStaffData: Array.isArray,
+  updateManagerEvaluations: d => !!d && typeof d.saved === 'number',
+  getExportTCCB: d => !!d && Array.isArray(d.rows),
+  exportReport:  d => !!d && !!d.sheetName,
+  exportCSVData: d => !!d && !!d.base64,
+  exportExcelData: d => !!d && !!d.base64
+};
+let apiVerWarned = false;
+function checkApiVersion(v) {
+  if (apiVerWarned || (v && String(v) >= API_REQUIRED)) return;
+  apiVerWarned = true;
+  let b = document.getElementById('ver-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'ver-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;background:#fef3c7;color:#92400e;border-bottom:1px solid #fcd34d;padding:8px 14px;font-size:12.5px;text-align:center;';
+    document.body.appendChild(b);
+  }
+  b.textContent = `⚠️ Apps Script của trang này đang chạy bản cũ (${v ? 'phiên bản ' + v : 'chưa có số phiên bản'}; cần ≥ ${API_REQUIRED}). ` +
+                  'Quản trị viên vui lòng dán Code.gs mới vào Apps Script và tạo Phiên bản mới. Một số chức năng có thể không chạy đúng.';
+}
+
+const API_TIMEOUT_MS = 90 * 1000;
+function apiError(message, code) { const e = new Error(message); e.code = code; return e; }
+
 async function api(action, args) {
   let res;
+  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), API_TIMEOUT_MS) : null;
   try {
     res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, args: args || {}, token: state.token })
+      body: JSON.stringify({ action, args: args || {}, token: state.token }),
+      signal: ctl ? ctl.signal : undefined
     });
   } catch (e) {
-    throw new Error('Không kết nối được máy chủ. Vui lòng kiểm tra mạng và thử lại.');
+    clearTimeout(timer);
+    if (e && e.name === 'AbortError') throw apiError('Máy chủ phản hồi quá lâu. Vui lòng thử lại sau ít phút.', 'TIMEOUT');
+    throw apiError('Không kết nối được máy chủ. Vui lòng kiểm tra mạng và thử lại.', 'NETWORK');
   }
   let j;
   try { j = await res.json(); }
-  catch (e) { throw new Error('Máy chủ phản hồi không hợp lệ (HTTP ' + res.status + ').'); }
+  catch (e) { clearTimeout(timer); throw apiError('Máy chủ phản hồi không hợp lệ (HTTP ' + res.status + '). Vui lòng thử lại.', 'UPSTREAM'); }
+  clearTimeout(timer);
+  if (!j || typeof j !== 'object') throw apiError('Máy chủ phản hồi không hợp lệ. Vui lòng thử lại.', 'UPSTREAM');
+  checkApiVersion(j.v);
   if (!j.success) {
     const err = new Error(j.message || 'Lỗi không xác định');
     err.code = j.code;
@@ -730,7 +812,57 @@ async function api(action, args) {
     }
     throw err;
   }
+  const ok = SHAPE[action];
+  if (ok && !ok(j.data)) {
+    console.warn('Dữ liệu không đúng dạng cho', action, j.data);
+    const err = new Error(action === 'saveData'
+      ? 'Máy chủ phản hồi không đúng dạng sau khi gửi phiếu. Phiếu có thể ĐÃ được lưu — vui lòng xem mục "Kết quả & lịch sử" trước khi gửi lại. Nếu lỗi lặp lại, báo Phòng TCNS cập nhật Apps Script.'
+      : `Máy chủ trả dữ liệu không đúng dạng cho thao tác "${action}". Có thể Apps Script của trang này chưa được cập nhật cùng phiên bản giao diện — vui lòng báo Phòng TCNS.`);
+    err.code = 'SHAPE';
+    throw err;
+  }
   return j.data;
+}
+
+/** Sau khi gửi phiếu: hiện kết quả; lỗi giao diện ở bước này không được che mất việc đã lưu */
+function afterSaved(month, res, resetFn) {
+  try { markSubmitted(month, res.score, res.grade); } catch (e) { cache.history = null; }
+  try {
+    document.getElementById('res-score').textContent = res.score;
+    document.getElementById('res-grade').textContent = res.grade;
+    document.getElementById('res-month').textContent = monthLabel(month);
+    document.getElementById('success-result').classList.remove('hidden');
+    resetFn();
+    resetMonthPicker('mp-home');
+    setStatus(document.getElementById('status-msg'), '', '');
+    document.getElementById('btn-start').classList.add('hidden');
+    renderSlots('', null);
+  } catch (e) { console.error(e); }
+  showPage('page-success');
+}
+/** Lỗi khi gửi phiếu: gửi trùng / phản hồi lạ → đưa về lịch sử để người dùng tự kiểm tra */
+async function onSaveError(e, resetFn, month) {
+  // Lỗi đường truyền / quá thời gian / phản hồi lỗi: phiếu có thể ĐÃ được lưu → kiểm tra lịch sử
+  if (month && e && ['TIMEOUT', 'NETWORK', 'UPSTREAM', 'BUSY'].indexOf(e.code) >= 0) {
+    try {
+      const hist = await getHistory(true);
+      const row = Array.isArray(hist) ? hist.find(r => r.thang === month && slotMatch(r, state.user)) : null;
+      if (row) {
+        afterSaved(month, { score: row.tongDiem, grade: row.xepLoai }, resetFn);
+        alert('✅ Phiếu tháng ' + monthLabel(month) + ' đã được ghi nhận trên hệ thống.');
+        return true;
+      }
+    } catch (_) { /* rơi xuống báo lỗi gốc */ }
+  }
+  showError(e);
+  if (e && (e.code === 'DUPLICATE' || e.code === 'SHAPE')) {
+    cache.history = null; cache.historyAt = 0;
+    try { resetFn(); } catch (x) {}
+    document.getElementById('success-result').classList.add('hidden');
+    showPage('page-success');
+    return true;
+  }
+  return false;
 }
 
 function downloadBase64(b64, fileName, mime) {
@@ -911,13 +1043,12 @@ async function handleVerify(ev) {
 }
 
 function handleLoginResult(res) {
-  if (res.otpRequired) showOtpModal(res);
+  if (res && res.otpRequired) showOtpModal(res);
   else finishLogin(res);
 }
 
 function showUnitPicker(res) {
-  const opts = res.donViList.map((d, i) =>
-    `<option value="${i}">${esc(d.donVi)}${d.role === 'manager' ? ' (Trưởng đơn vị)' : d.role === 'hr' ? ' (Tổ chức cán bộ)' : ''}</option>`).join('');
+  const opts = res.donViList.map((d, i) => `<option value="${i}">${esc(slotLabel(d))}</option>`).join('');
   let modal = document.getElementById('unit-picker-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -1027,7 +1158,8 @@ async function submitOtp() {
   try {
     const res = await api('verifyOtp', { otpId: otp.id, code, device: await getDeviceInfo() });
     closeOtpModal();
-    finishLogin(res);
+    try { finishLogin(res); }
+    catch (e2) { alert('⚠️ ' + e2.message); logout(); }
   } catch (e) {
     if (e.code === 'OTP_EXPIRED') { closeOtpModal(); alert('⚠️ ' + e.message); }
     else { setStatus(st, 'done', esc(e.message)); input.value = ''; input.focus(); }
@@ -1073,13 +1205,13 @@ function showSwitchUnit() {
     document.body.appendChild(modal);
   }
   const list = (state.units || []).map((d, i) => {
-    const cur = d.donVi === u.donVi && d.role === u.role;
+    const cur = d.donVi === u.donVi && d.role === u.role && loaiOf(d) === loaiOf(u);
     return `<button class="unit-choice${cur ? ' current' : ''}" ${cur ? 'disabled' : `onclick="doSwitchUnit(${i}, this)"`}>
-      ${cur ? '✅ ' : '🏢 '}${esc(d.donVi)}${ROLE_SUFFIX[d.role] || ''}<small>${cur ? 'Đang làm việc' : 'Bấm để chuyển sang'}</small></button>`;
+      ${cur ? '✅ ' : '🏢 '}${esc(slotLabel(d))}<small>${cur ? 'Đang làm việc' : 'Bấm để chuyển sang'}</small></button>`;
   }).join('');
   modal.innerHTML = `<div class="modal-box" style="text-align:left;">
     <h3 style="color:var(--navy);margin:0 0 6px;font-size:1.05rem;text-align:center;">🔄 Chuyển đơn vị</h3>
-    <p style="color:var(--gray-600);font-size:13px;margin-bottom:14px;text-align:center;">Chọn đơn vị muốn thao tác. Mỗi đơn vị đánh giá riêng.</p>
+    <p style="color:var(--gray-600);font-size:13px;margin-bottom:14px;text-align:center;">Chọn vị trí muốn thao tác. Mỗi vị trí (đơn vị + loại phiếu) đánh giá riêng.</p>
     ${list}
     <button class="btn btn-gray" onclick="document.getElementById('switch-unit-modal').classList.add('hidden')">Đóng</button>
   </div>`;
@@ -1092,7 +1224,7 @@ async function doSwitchUnit(i, btn) {
   document.querySelectorAll('#switch-unit-modal .unit-choice').forEach(b => { b.disabled = true; });
   btn.innerHTML = '⏳ Đang chuyển sang ' + esc(d.donVi) + '...';
   try {
-    const res = await api('switchUnit', { donVi: d.donVi, role: d.role, device: await getDeviceInfo() });
+    const res = await api('switchUnit', { donVi: d.donVi, role: d.role, loaiPhieu: d.loaiPhieu, device: await getDeviceInfo() });
     saveSession(res);
     location.reload();   // tải lại để mọi trang, tháng đã chọn, bộ nhớ tạm… về đúng đơn vị mới
   } catch (e) {
@@ -1111,13 +1243,26 @@ function saveSession(res) {
 }
 
 function finishLogin(res) {
+  if (!res || !res.token || !res.user || typeof res.user.hoTen !== 'string')
+    throw new Error('Máy chủ trả về dữ liệu đăng nhập không đầy đủ. Vui lòng tải lại trang (Ctrl+F5) và đăng nhập lại.');
   saveSession(res);
   document.getElementById('cccd_input').value = '';
   enterApp();
 }
 
 function enterApp() {
+  try { enterAppInner(); }
+  catch (e) {
+    console.error(e);
+    alert('⚠️ Không vào được hệ thống: ' + (e && e.message ? e.message : e) +
+          '\n\nVui lòng tải lại trang (Ctrl+F5) rồi đăng nhập lại. Nếu vẫn lỗi, chụp màn hình thông báo này gửi Phòng TCNS.');
+    logout();
+  }
+}
+
+function enterAppInner() {
   const u = state.user;
+  if (!u || typeof u.hoTen !== 'string') throw new Error('Phiên đăng nhập không hợp lệ');
   document.getElementById('login-page').classList.add('hidden');
   document.getElementById('app-shell').classList.remove('hidden');
   const last = (u.hoTen || '?').trim().split(/\s+/).pop();
@@ -1125,7 +1270,7 @@ function enterApp() {
   document.getElementById('s-user-name').textContent = u.hoTen;
   document.getElementById('s-user-role').textContent = ROLE_LABEL[u.role] + ' · ' + u.donVi;
   document.getElementById('dsp-name').textContent = u.hoTen;
-  document.getElementById('dsp-unit').textContent = u.donVi;
+  document.getElementById('dsp-unit').textContent = u.donVi + ' · Phiếu ' + LOAI_LABEL[loaiOf(u)];
   document.getElementById('mgr-unit-info').textContent = u.donVi;
   const multi = (state.units || []).length > 1;
   document.getElementById('btn-switch-unit').classList.toggle('hidden', !multi);
@@ -1158,6 +1303,11 @@ function getHistory(force) {
   if (fresh && !force) return Promise.resolve(cache.history);
   if (cache.historyP && !force) return cache.historyP;
   const p = api('getUserHistory').then(d => {
+    if (!Array.isArray(d)) {
+      console.warn('getUserHistory trả về dữ liệu không phải danh sách:', d);
+      if (cache.historyP === p) cache.historyP = null;
+      throw new Error('Dữ liệu lịch sử không hợp lệ');
+    }
     if (cache.historyP === p) { cache.history = d; cache.historyAt = Date.now(); cache.historyP = null; }
     return d;
   }, e => { if (cache.historyP === p) cache.historyP = null; throw e; });
@@ -1165,9 +1315,10 @@ function getHistory(force) {
   return p;
 }
 function markSubmitted(month, score, grade) {
-  if (!cache.history) return;
-  cache.history = [{ thang: month, donVi: state.user.donVi, tongDiem: score, xepLoai: grade, sepLoai: '' }]
-    .concat(cache.history.filter(r => !(r.thang === month && r.donVi === state.user.donVi)));
+  if (!Array.isArray(cache.history)) { cache.history = null; cache.historyAt = 0; return; }
+  cache.history = [{ thang: month, donVi: state.user.donVi, loaiPhieu: isV2Month(month) ? loaiOf(state.user) : '',
+                     tongDiem: score, xepLoai: grade, sepLoai: '' }]
+    .concat(cache.history.filter(r => !(r.thang === month && slotMatch(r, state.user))));
   cache.historyAt = Date.now();
 }
 
@@ -1186,19 +1337,42 @@ function getStaffData(month, force) {
   return p;
 }
 
+/** Danh sách các vị trí đánh giá của người dùng trong tháng đang chọn, kèm trạng thái đã nộp / chưa nộp */
+function renderSlots(month, hist) {
+  const box = document.getElementById('my-slots');
+  const units = state.units || [];
+  if (!month || units.length < 2 || !Array.isArray(hist)) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  const u = state.user;
+  const rows = units.map((d, i) => {
+    const done = hist.some(r => r.thang === month && slotMatch(r, d));
+    const cur = d.donVi === u.donVi && d.role === u.role && loaiOf(d) === loaiOf(u);
+    return `<div class="slot-row ${done ? 'done' : 'todo'}">
+      <div>${done ? '✅' : '⏳'} <b>${esc(d.donVi)}</b>${loaiTag(d)}<small>${esc(slotLabel(d))} — ${done ? 'đã nộp' : 'chưa nộp'}</small></div>
+      ${cur ? '<span class="slot-cur">Đang chọn</span>' : `<button type="button" onclick="doSwitchUnit(${i}, this)">Chuyển sang</button>`}
+    </div>`;
+  }).join('');
+  const left = units.filter(d => !hist.some(r => r.thang === month && slotMatch(r, d))).length;
+  box.innerHTML = `<div class="my-slots-title">📋 Các phiếu của Thầy/Cô tháng ${esc(monthLabel(month))}` +
+    (left ? ` — còn <span style="color:var(--accent-dark);">${left}</span> phiếu chưa nộp` : ' — đã nộp đủ') + `</div>${rows}`;
+  box.classList.remove('hidden');
+}
+
 async function onHomeMonth(month) {
   const msg = document.getElementById('status-msg'), btn = document.getElementById('btn-start');
   btn.classList.add('hidden');
-  if (!month) { setStatus(msg, '', ''); return; }
+  if (!month) { setStatus(msg, '', ''); renderSlots('', null); return; }
   const n = nextSeq('home');
   if (!cache.history) setStatus(msg, 'checking', '🔍 Đang kiểm tra...');
   try {
-    let done;
-    try { done = (await getHistory()).some(r => r.thang === month && r.donVi === state.user.donVi); }
+    let done, hist = null;
+    try { hist = await getHistory(); done = hist.some(r => r.thang === month && slotMatch(r, state.user)); }
     catch (e) { done = await api('checkDoubleEntry', { month }); }   // dự phòng
     if (!isLatest('home', n)) return;
-    if (done) setStatus(msg, 'done', `❌ Bạn đã gửi đánh giá tháng ${monthLabel(month)}${(state.units || []).length > 1 ? ' tại ' + esc(state.user.donVi) : ''} rồi!`);
-    else { setStatus(msg, 'ready', `✅ Bạn chưa đánh giá tháng ${monthLabel(month)}. Mời bạn bắt đầu.`); btn.classList.remove('hidden'); }
+    renderSlots(month, hist);
+    const multi = (state.units || []).length > 1;
+    const where = multi ? ` (${esc(state.user.donVi)} · ${esc(LOAI_LABEL[loaiOf(state.user)])})` : '';
+    if (done) setStatus(msg, 'done', `❌ Bạn đã gửi đánh giá tháng ${monthLabel(month)}${where} rồi!`);
+    else { setStatus(msg, 'ready', `✅ Bạn chưa đánh giá tháng ${monthLabel(month)}${where}. Mời bạn bắt đầu.`); btn.classList.remove('hidden'); }
   } catch (e) {
     if (isLatest('home', n)) setStatus(msg, 'warn', '⚠️ ' + esc(e.message));
   }
@@ -1331,25 +1505,15 @@ async function submitData() {
   btns.forEach(b => setBusy(b, true, '⏳ Đang gửi...'));
   try {
     const res = await api('saveData', { form });
-    markSubmitted(form.assessmentMonth, res.score, res.grade);
-    document.getElementById('res-score').textContent = res.score;
-    document.getElementById('res-grade').textContent = res.grade;
-    document.getElementById('res-month').textContent = monthLabel(form.assessmentMonth);
-    document.getElementById('success-result').classList.remove('hidden');
-    resetForm();
-    resetMonthPicker('mp-home');
-    setStatus(document.getElementById('status-msg'), '', '');
-    document.getElementById('btn-start').classList.add('hidden');
-    showPage('page-success');
+    afterSaved(form.assessmentMonth, res, resetForm);
   } catch (e) {
-    showError(e);
-    btns.forEach(b => setBusy(b, false));
+    if (!(await onSaveError(e, resetForm, form.assessmentMonth))) btns.forEach(b => setBusy(b, false));
   }
 }
 
 // ============================================================
 // PHIẾU MỚI (mẫu chính thức) — áp dụng từ tháng FORM_V2_FROM
-// Nội dung tiêu chí ghi NGUYÊN VĂN theo phiếu của Phòng TCCB;
+// Nội dung tiêu chí ghi NGUYÊN VĂN theo phiếu của Phòng TCNS;
 // chấm điểm đúng chỗ phiếu ghi điểm.
 // ============================================================
 const FORM_V2_FROM = '10-2026';
@@ -1368,7 +1532,8 @@ const V2_LABEL = { i11:'1.1', i12:'1.2', i13:'1.3', i14:'1.4', i15:'1.5',
 // Điểm thưởng tối đa đủ 7 điểm — giống bonusCap_ ở backend
 function bonusCap(_kpi) { return BONUS_MAX; }
 
-const V2_FORM = [
+// ---- Mẫu phiếu khối hành chính, hỗ trợ, phục vụ (HTPV) ----
+const V2_FORM_HTPV = [
   { part: 'I. Tiêu chí chung (30 điểm)', groups: [
     { title: '1. Phẩm chất chính trị, phẩm chất đạo đức và ý thức kỷ luật, kỷ cương trong thực thi nhiệm vụ (10 điểm)',
       crits: [
@@ -1464,6 +1629,116 @@ const V2_FORM = [
   ] }
 ];
 
+// ---- Mẫu phiếu giảng viên, nghiên cứu viên, trợ giảng (GV) ----
+const V2_FORM_GV = [
+  { part: 'I. Tiêu chí chung (30 điểm)', groups: [
+    { title: '1. Phẩm chất chính trị, phẩm chất đạo đức và ý thức kỷ luật, kỷ cương trong thực thi nhiệm vụ (10 điểm)',
+      crits: [
+        { no: '1.1', text: 'Chấp hành đường lối, chủ trương của Đảng, chính sách, pháp luật của Nhà nước và quy định của ĐHYD/ĐV/TC (2 điểm)',
+          score: { key: 'i11', label: 'Điểm 1.1 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+        { no: '1.2', text: 'Có lập trường chính trị vững vàng; giữ gìn phẩm chất đạo đức, lối sống lành mạnh; không có biểu hiện suy thoái về tư tưởng chính trị, đạo đức, lối sống (2 điểm)',
+          score: { key: 'i12', label: 'Điểm 1.2 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+        { no: '1.3', text: 'Thực hiện đúng chuẩn mực đạo đức nghề nghiệp; trung thực, khách quan, công bằng trong thực hiện nhiệm vụ (2 điểm)',
+          score: { key: 'i13', label: 'Điểm 1.3 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+        { no: '1.4', text: 'Chấp hành sự phân công; thực hiện kỷ luật, kỷ cương; tuân thủ nội quy, quy chế của ĐHYD/ĐV/TC; đảm bảo giờ lên lớp, coi thi, chấm thi theo phân công (2 điểm)',
+          items: [
+            '- Báo cáo sai lệch/thiếu gây ảnh hưởng công tác quản lý/chuyên môn: trừ 0,5 điểm/lần được lãnh đạo ĐHYD/ĐV/TC nhắc nhở.',
+            '- Không chấp hành sự phân công của lãnh đạo bộ môn/tổ chức/đơn vị/ĐHYD: trừ 0,5 điểm/lần được lãnh đạo ĐHYD/ĐV/TC nhắc nhở.',
+            '- Vi phạm quy chế, quy định, nội quy; vi phạm thời gian lên lớp hoặc tham dự các cuộc họp/hội nghị bắt buộc: trừ 0,5 điểm/lần.',
+            '- Nghỉ dạy, nghỉ làm hoặc vắng mặt không xin phép tại các cuộc họp/hội nghị bắt buộc: trừ 01 điểm/lần'
+          ], plain: true,
+          score: { key: 'i14', label: 'Điểm 1.4 (tối đa 2 điểm)', values: steps(2, 0.5) } },
+        { no: '1.5', text: 'Có tinh thần đoàn kết, hợp tác; giữ gìn uy tín, hình ảnh của ĐHYD/ĐV/TC (2 điểm)',
+          score: { key: 'i15', label: 'Điểm 1.5 (tối đa 2 điểm)', values: steps(2, 0.5) } }
+      ] },
+
+    { title: '2. Năng lực chuyên môn, nghiệp vụ theo yêu cầu của vị trí việc làm; tinh thần trách nhiệm; thái độ phục vụ; khả năng phối hợp trong công tác (10 điểm)',
+      crits: [
+        { no: '2.1', text: 'Năng lực chuyên môn, nghiệp vụ giảng dạy/nghiên cứu theo yêu cầu của vị trí việc làm (3 điểm)', subs: [
+          { text: 'Có kiến thức chuyên sâu, toàn diện về lĩnh vực giảng dạy/nghiên cứu được phân công; hiểu biết đầy đủ về quy chế đào tạo, quy trình chuyên môn liên quan đến vị trí việc làm. (1 điểm)',
+            score: { key: 'i211', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+          { text: 'Chủ động học tập; tham gia đào tạo, bồi dưỡng kiến thức chuyên môn, nghiệp vụ sư phạm, nâng cao kỹ năng nghiên cứu khoa học (1 điểm)',
+            score: { key: 'i212', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+          { text: 'Có kỹ năng xử lý công việc độc lập, làm việc nhóm hiệu quả; sử dụng thành thạo công nghệ thông tin, học liệu số và các công cụ hỗ trợ giảng dạy/nghiên cứu. (1 điểm)',
+            score: { key: 'i213', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+        ] },
+        { no: '2.2', text: 'Khả năng đáp ứng yêu cầu thực thi nhiệm vụ giảng dạy/nghiên cứu được giao thường xuyên, đột xuất (3 điểm)', subs: [
+          { text: 'Nhiệm vụ thường xuyên: Hoàn thành định mức giờ chuẩn giảng dạy/NCKH theo kế hoạch của bộ môn/khoa/phòng; duy trì ổn định chất lượng chuyên môn. (2 điểm)',
+            score: { key: 'i221', label: 'Điểm (tối đa 2 điểm)', values: steps(2, 0.5) } },
+          { text: 'Nhiệm vụ đột xuất: Chủ động đề xuất giải pháp, thực hiện hiệu quả các công việc phát sinh (dạy thay, coi/chấm thi bổ sung, biên soạn đề cương...) có tính chất chuyên môn cao. (1 điểm)',
+            score: { key: 'i222', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+        ] },
+        { no: '2.3', text: 'Tinh thần trách nhiệm trong thực hiện nhiệm vụ (2 điểm)', subs: [
+          { text: 'Có tinh thần trách nhiệm trong nghiên cứu, đề xuất, tham mưu nội dung chuyên môn, chương trình đào tạo; chủ động cập nhật, điều chỉnh phương pháp giảng dạy phù hợp yêu cầu mới. (1 điểm)',
+            score: { key: 'i231', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+          { text: 'Tích cực ứng dụng công nghệ, học liệu số trong giảng dạy/nghiên cứu; có tinh thần cầu thị, phối hợp tốt với đồng nghiệp trong bộ môn/khoa/trường. (1 điểm)',
+            score: { key: 'i232', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+        ] },
+        { no: '2.4', text: 'Thái độ phục vụ người học, đồng nghiệp và các tổ chức, cá nhân có liên quan; khả năng phối hợp trong công tác (2 điểm)', subs: [
+          { text: 'Có thái độ giao tiếp, hành vi chuẩn mực với người học, đồng nghiệp; đáp ứng quy định về văn hóa ứng xử của ĐHYD/ĐV/TC (1 điểm)',
+            note: 'Trường hợp có vi phạm được phản ảnh và ghi nhận tại biên bản họp của ĐHYD/đơn vị/tổ chức: 0 điểm',
+            score: { key: 'i241', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } },
+          { text: 'Phối hợp trong thực hiện nhiệm vụ giảng dạy/nghiên cứu; không đùn đẩy trách nhiệm, làm việc cầm chừng, qua loa, đại khái, kém hiệu quả (1 điểm)',
+            note: 'Trường hợp cá nhân được lãnh đạo ĐHYD/ĐV/TC nhắc nhở công khai trước tập thể ĐHYD/ĐV/TC: 0 điểm',
+            score: { key: 'i242', label: 'Điểm (tối đa 1 điểm)', values: steps(1, 0.5) } }
+        ] }
+      ] },
+
+    { title: '3. Năng lực đổi mới, sáng tạo; dám nghĩ, dám làm, dám chịu trách nhiệm vì lợi ích chung trong thực hiện nhiệm vụ (10 điểm)',
+      crits: [
+        { no: '3.1', text: 'Có sản phẩm, giải pháp đột phá, sáng tạo (bài giảng, học liệu, đề tài NCKH, công bố khoa học...) đem lại giá trị, hiệu quả thiết thực cho tổ chức, đơn vị (4 điểm)',
+          score: { key: 'i31', label: 'Điểm 3.1 (tối đa 4 điểm)', values: steps(4, 0.5) } },
+        { no: '3.2', text: 'Có tinh thần chịu trách nhiệm trước kết quả công việc; chủ động nhận trách nhiệm khi có sai sót và có biện pháp khắc phục rõ ràng, cụ thể (3 điểm)',
+          score: { key: 'i32', label: 'Điểm 3.2 (tối đa 3 điểm)', values: steps(3, 0.5) } },
+        { no: '3.3', text: 'Chủ động, trách nhiệm với nhiệm vụ được giao; dám nghĩ, dám làm, dám chịu trách nhiệm, dám đổi mới, sáng tạo, linh hoạt trong thực hiện nhiệm vụ (đối với viên chức quản lý) (3 điểm)',
+          score: { key: 'i33', label: 'Điểm 3.3 (tối đa 3 điểm)', values: steps(3, 0.5) } }
+      ] }
+  ] },
+
+  { part: 'II. Tiêu chí đánh giá kết quả thực hiện nhiệm vụ giảng dạy/nghiên cứu được giao (70 điểm)', groups: [
+    { title: '1. Khả năng đáp ứng yêu cầu về số lượng giờ chuẩn giảng dạy/ NCKH, nhiệm vụ được giao (tối đa 20 điểm)',
+      crits: [{ items: [
+        '- Dưới 80% định mức/kế hoạch: 0đ',
+        '- Đạt 80-85%: 14đ; 86-90%: 15đ; 91-95%: 16đ; 96-<100%: 17đ;',
+        '- Hoàn thành 100% số lượng công việc, giờ chuẩn được giao: 18đ',
+        '- Vượt 1-5%: 18,5đ; 6-10%: 19đ; 11-15%: 19,5đ; ≥16%: 20đ'
+      ], plain: true }],
+      score: { key: 'ii1', label: 'Điểm II.1 (tối đa 20 điểm)',
+        values: [[0,'<80%'],[14,'80-85%'],[15,'86-90%'],[16,'91-95%'],[17,'96-<100%'],[18,'100%'],[18.5,'vượt 1-5%'],[19,'vượt 6-10%'],[19.5,'vượt 11-15%'],[20,'vượt ≥16%']] } },
+    { title: '2. Khả năng đáp ứng yêu cầu về tiến độ công việc, nhiệm vụ được giao (tối đa 20 điểm)',
+      crits: [{ items: [
+        '- Dưới 80%: 0đ',
+        '- Đạt 80-85%: 12đ; 86-90%: 13đ; 91-95%: 14đ; 96-<100%: 15đ;',
+        '- Hoàn thành 100% đúng tiến độ được giao: 16đ',
+        '- Vượt 1-5%: 17đ; 6-10%: 18đ; 11-15%: 19đ; ≥16%: 20đ'
+      ], plain: true }],
+      score: { key: 'ii2', label: 'Điểm II.2 (tối đa 20 điểm)',
+        values: [[0,'<80%'],[12,'80-85%'],[13,'86-90%'],[14,'91-95%'],[15,'96-<100%'],[16,'100%'],[17,'vượt 1-5%'],[18,'vượt 6-10%'],[19,'vượt 11-15%'],[20,'vượt ≥16%']] } },
+    { title: '3. Khả năng đáp ứng yêu cầu về chất lượng công việc, nhiệm vụ được giao (tối đa 30 điểm)',
+      crits: [{ items: [
+        '- Dưới 80%: 0đ',
+        '- Đạt 80-85%: 22đ; 86-90%: 23đ; 91-95%: 24đ; 96-<100%: 25đ;',
+        '- Hoàn thành 100% yêu cầu chất lượng: 26đ',
+        '- Vượt 1-5%: 27đ; 6-10%: 28đ; 11-15%: 29đ; ≥16%: 30đ'
+      ], plain: true }],
+      score: { key: 'ii3', label: 'Điểm II.3 (tối đa 30 điểm)',
+        values: [[0,'<80%'],[22,'80-85%'],[23,'86-90%'],[24,'91-95%'],[25,'96-<100%'],[26,'100%'],[27,'vượt 1-5%'],[28,'vượt 6-10%'],[29,'vượt 11-15%'],[30,'vượt ≥16%']] } }
+  ] }
+];
+
+const V2_FORMS = { HTPV: V2_FORM_HTPV, GV: V2_FORM_GV };
+// Hai mẫu cùng cấu trúc điểm (cùng V2_KEYS); chỉ khác chữ tiêu chí. Điểm chấm và cách xếp loại giống nhau.
+const V2_TEXT = {
+  HTPV: {
+    title: 'Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ khối hành chính, hỗ trợ, phục vụ',
+    bonus: 'Có cách làm hay, phương pháp mới trong lĩnh vực được giao, được áp dụng hiệu quả và có thể nhân rộng trong bộ môn/đơn vị/ĐHYD'
+  },
+  GV: {
+    title: 'Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với giảng viên, nghiên cứu viên, trợ giảng',
+    bonus: 'Có cách làm hay, phương pháp mới trong giảng dạy/nghiên cứu/quản lý đào tạo, được áp dụng hiệu quả và có thể nhân rộng trong bộ môn/đơn vị/ĐHYD'
+  }
+};
+
 function critHtml(c) {
   const items = (c.items || []).map(it =>
     `<li${c.plain ? ' style="list-style:none;margin-left:-18px;"' : ''}>${esc(it)}</li>`).join('');
@@ -1484,15 +1759,19 @@ function scoreBoxHtml(sc, compact) {
   return `<div class="score-box${compact ? ' compact' : ''}"><div class="sb-label">✍️ ${esc(sc.label)}</div><div class="radio-group" data-key="${sc.key}">${opts}</div></div>`;
 }
 
-function buildFormV2() {
+function buildFormV2(type) {
+  type = type === 'GV' ? 'GV' : 'HTPV';
+  state.v2Type = type;
+  const T = V2_TEXT[type];
+  document.getElementById('v2-title').textContent = T.title;
   const body = document.getElementById('v2-body');
-  let html = V2_FORM.map(p => `<div class="part-header">${esc(p.part)}</div>` + p.groups.map(g =>
+  let html = V2_FORMS[type].map(p => `<div class="part-header">${esc(p.part)}</div>` + p.groups.map(g =>
     `<div class="group-header">${esc(g.title)}</div>${g.crits.map(critHtml).join('')}${g.score ? scoreBoxHtml(g.score) : ''}`
   ).join('')).join('');
 
   html += `<div class="part-header" id="v2-part3">III. Điểm thưởng (khuyến khích) - cộng thêm, không tính vào tổng 100 điểm gốc</div>
     <div class="crit">
-      <div class="crit-title"><b>1</b>&nbsp; Có cách làm hay, phương pháp mới trong lĩnh vực được giao, được áp dụng hiệu quả và có thể nhân rộng trong bộ môn/đơn vị/ĐHYD</div>
+      <div class="crit-title"><b>1</b>&nbsp; ${esc(T.bonus)}</div>
       <div class="ital" style="font-size:13px;margin-top:6px;line-height:1.55;">Ghi chú: Tổng điểm thưởng ≤ 10% tổng điểm KPI đạt được trong kỳ <b>(tối đa 7 điểm)</b>. Cá nhân tự đề xuất; LĐ đơn vị xem xét, xác nhận. Điểm thưởng được cộng trực tiếp vào tổng điểm; nếu tổng điểm sau khi cộng thưởng vượt quá 100 thì quy về điểm tối đa 100.</div>
     </div>
     <div class="score-box">
@@ -1509,15 +1788,18 @@ function buildFormV2() {
   body.innerHTML = html;
 
   const form = document.getElementById('evaluationFormV2');
-  form.addEventListener('change', e => {
-    if (e.target.type === 'radio') {
-      const g = e.target.closest('.radio-group');
-      if (g) g.classList.remove('missing');
-      calcV2();
-    }
-  });
-  bindWordLimit('v2-bonus-desc', 'v2-bonus-count', 'v2-bonus-error');
-  bindWordLimit('v2-evidence', 'v2-evidence-count', 'v2-evidence-error');
+  if (!form.dataset.bound) {          // chỉ gắn một lần dù form được dựng lại khi đổi loại phiếu
+    form.dataset.bound = '1';
+    form.addEventListener('change', e => {
+      if (e.target.type === 'radio') {
+        const g = e.target.closest('.radio-group');
+        if (g) g.classList.remove('missing');
+        calcV2();
+      }
+    });
+    bindWordLimit('v2-evidence', 'v2-evidence-count', 'v2-evidence-error');
+  }
+  bindWordLimit('v2-bonus-desc', 'v2-bonus-count', 'v2-bonus-error');   // ô mô tả được tạo mới sau mỗi lần dựng
 }
 
 // Giới hạn số từ: cắt phần vượt quá nhưng giữ nguyên định dạng phần còn lại
@@ -1620,9 +1902,11 @@ function resetFormV2() {
 }
 
 function startEvaluationV2(month) {
+  const type = loaiOf(state.user);
+  if (state.v2Type !== type) buildFormV2(type);   // dựng đúng mẫu phiếu của vị trí đang làm
   resetFormV2();
   state.v2Month = month;
-  document.getElementById('v2-name-display').textContent = state.user.hoTen;
+  document.getElementById('v2-name-display').textContent = state.user.hoTen + ' · ' + state.user.donVi;
   document.getElementById('v2-month-display').textContent = monthLabel(month);
   showFormPage('form-page-v2');
 }
@@ -1663,7 +1947,7 @@ async function submitDataV2() {
   form.moTaThuong = c.bonus > 0 ? desc.value.trim() : '';
   form.canCuVuot = c.showAPlus ? ev.value.trim() : '';
 
-  const msg = `Xác nhận gửi phiếu tháng ${monthLabel(state.v2Month)}?\n\nTổng điểm: ${fmt(c.total)}\nXếp loại tự đánh giá: ${c.g.grade}` +
+  const msg = `Xác nhận gửi phiếu ${LOAI_LABEL[loaiOf(state.user)]} tháng ${monthLabel(state.v2Month)} tại ${state.user.donVi}?\n\nTổng điểm: ${fmt(c.total)}\nXếp loại tự đánh giá: ${c.g.grade}` +
               (c.g.reasons.length ? `\n(${c.g.reasons[0]})` : '') + '\n\nSau khi gửi sẽ không sửa được.';
   if (!confirm(msg)) return;
 
@@ -1671,19 +1955,9 @@ async function submitDataV2() {
   setBusy(btn, true, '⏳ Đang gửi...');
   try {
     const res = await api('saveData', { form });
-    markSubmitted(state.v2Month, res.score, res.grade);
-    document.getElementById('res-score').textContent = res.score;
-    document.getElementById('res-grade').textContent = res.grade;
-    document.getElementById('res-month').textContent = monthLabel(state.v2Month);
-    document.getElementById('success-result').classList.remove('hidden');
-    resetFormV2();
-    resetMonthPicker('mp-home');
-    setStatus(document.getElementById('status-msg'), '', '');
-    document.getElementById('btn-start').classList.add('hidden');
-    showPage('page-success');
+    afterSaved(state.v2Month, res, resetFormV2);
   } catch (e) {
-    showError(e);
-    setBusy(btn, false);
+    if (!(await onSaveError(e, resetFormV2, state.v2Month))) setBusy(btn, false);
   }
 }
 
@@ -1692,11 +1966,12 @@ async function submitDataV2() {
 // ============================================================
 function renderHistory(data) {
   const wrap = document.getElementById('history-table-wrap');
+  if (!Array.isArray(data)) data = [];
   if (!data.length) { wrap.innerHTML = '<div class="empty-state">Chưa có lịch sử đánh giá nào.</div>'; return; }
   wrap.innerHTML = `<div class="table-wrap"><table class="history-table">
-    <thead><tr><th>Tháng</th><th>Đơn vị</th><th>Tổng điểm</th><th>Tự xếp loại</th><th>Trưởng ĐV xếp loại</th></tr></thead>
+    <thead><tr><th>Tháng</th><th>Đơn vị</th><th>Loại phiếu</th><th>Tổng điểm</th><th>Tự xếp loại</th><th>Trưởng ĐV xếp loại</th></tr></thead>
     <tbody>${data.map(r => `<tr>
-      <td><b>${esc(monthLabel(r.thang))}</b></td><td>${esc(r.donVi)}</td><td><b>${cell(r.tongDiem)}</b></td>
+      <td><b>${esc(monthLabel(r.thang))}</b></td><td>${esc(r.donVi)}</td><td>${r.loaiPhieu ? esc(LOAI_LABEL[r.loaiPhieu] || r.loaiPhieu) : '—'}</td><td><b>${cell(r.tongDiem)}</b></td>
       <td>${gradeBadge(r.xepLoai)}</td><td>${r.sepLoai ? gradeBadge(r.sepLoai) : pendingBadge('Chờ xác nhận')}</td>
     </tr>`).join('')}</tbody></table></div>`;
 }
@@ -1790,9 +2065,9 @@ function mgrRowV2(item) {
   const bonusCell = proposed > 0
     ? `<input type="text" inputmode="decimal" class="mgr-input mgr-bonus" placeholder="${fmt(proposed)}" value="${item.sepThuong === '' ? '' : fmt(item.sepThuong)}" oninput="mgrBonusChanged(this)" title="0 – ${fmt(proposed)} điểm">`
     : '<span class="muted-sm">0</span>';
-  return `<tr class="${item.sepLoai ? 'row-done' : ''}" data-v2="1" data-row="${esc(item.rowId)}" data-msnv="${esc(item.msnv)}" data-name="${esc(item.hoTen)}"
+  return `<tr class="${item.sepLoai ? 'row-done' : ''}" data-v2="1" data-row="${esc(item.rowId)}" data-msnv="${esc(item.msnv)}" data-name="${esc(item.hoTen)}" data-loai="${esc(item.loaiPhieu || '')}"
       data-kpi="${esc(item.tongKpi)}" data-proposed="${proposed}" data-ii1="${esc(d.ii1)}" data-ii2="${esc(d.ii2)}" data-ii3="${esc(d.ii3)}">
-    <td>${esc(item.hoTen)}</td>
+    <td>${esc(item.hoTen)}${loaiTag(item)}</td>
     ${V2_KEYS.map(k => `<td>${cell(d[k])}</td>`).join('')}
     <td${bold}>${cell(item.tongKpi)}</td><td${bold}>${cell(item.thuong)}</td><td class="note">${cell(item.moTaThuong)}</td>
     <td${bold}>${cell(item.tongDiem)}</td><td>${gradeBadge(item.xepLoai)}</td>
@@ -1857,7 +2132,7 @@ async function saveAllEvaluations() {
     }
     if (p.empty && !grade && !note && pb.empty) return;
     const it = {
-      rowId: Number(tr.dataset.row), msnv: tr.dataset.msnv, hoTen: tr.dataset.name,
+      rowId: Number(tr.dataset.row), msnv: tr.dataset.msnv, hoTen: tr.dataset.name, loaiPhieu: tr.dataset.loai || '',
       sepDiem: p.empty ? '' : p.value, sepLoai: grade, sepGhiChu: note
     };
     if (tr.dataset.v2) it.sepThuong = pb.empty ? '' : pb.value;
@@ -1971,9 +2246,11 @@ function renderHRDashboard(data, month) {
   const byUnit = groupByUnit(data);
   const units = Object.keys(byUnit).sort((a, b) => a.localeCompare(b, 'vi'));
   const dashCell = v => `<td class="c">${v || '-'}</td>`;
+  const nGV = data.filter(r => r.loaiPhieu === 'GV').length, nHT = data.filter(r => r.loaiPhieu === 'HTPV').length;
+  const loaiNote = (nGV || nHT) ? ` (${nGV} phiếu giảng viên · ${nHT} phiếu hỗ trợ, phục vụ)` : '';
   document.getElementById('hr-dashboard-content').innerHTML = `
     <div style="font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:14px;">
-      📊 Tháng ${monthLabel(month)} · <b>${units.length}</b> đơn vị · <b>${data.length}</b> VC-NLĐ đã nộp
+      📊 Tháng ${monthLabel(month)} · <b>${units.length}</b> đơn vị · <b>${data.length}</b> phiếu đã nộp${loaiNote}
       ${pending ? ` · <span style="color:var(--accent-dark);">⏳ ${pending} chờ TĐV xác nhận</span>` : ''}
     </div>
     <div class="sub-title">Tự xếp loại</div>
@@ -2018,7 +2295,7 @@ function renderHRDetail(data) {
       <div class="table-wrap"><table class="history-table">
         <thead><tr><th>Họ và tên</th><th>Tổng điểm</th><th>Tự xếp loại</th><th>TĐV xếp loại</th><th>Ghi chú</th></tr></thead>
         <tbody>${rows.map(r => `<tr>
-          <td style="font-weight:600;">${esc(r.hoTen)}</td><td><b>${cell(r.tongDiem)}</b></td>
+          <td style="font-weight:600;">${esc(r.hoTen)}${loaiTag(r)}</td><td><b>${cell(r.tongDiem)}</b></td>
           <td>${gradeBadge(r.xepLoai)}</td><td>${r.sepLoai ? gradeBadge(r.sepLoai) : pendingBadge('Chờ TĐV')}</td>
           <td style="font-size:12px;color:var(--gray-600);">${esc(r.sepGhiChu)}</td>
         </tr>`).join('')}</tbody>
@@ -2051,14 +2328,14 @@ function exportToCSV() {
 }
 
 // ============================================================
-// BẢNG TỔNG HỢP CHI THU NHẬP TĂNG THÊM — xuất .xlsx đúng mẫu Phòng TCCB
+// BẢNG TỔNG HỢP CHI THU NHẬP TĂNG THÊM — xuất .xlsx đúng mẫu Phòng TCNS
 // Dữ liệu lấy từ máy chủ (getExportTCCB), file dựng ngay trên trình duyệt bằng ExcelJS.
 // ============================================================
 const EXCELJS_SRC = [
   'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
   'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js'
 ];
-const TCCB_DEFAULTS = { phoTP: 'Lâm Quốc Việt', hieuTruong: 'Trần Diệp Tuấn', scope: 'A', lapOn: true, tpOn: true, htOn: true };
+const TCCB_DEFAULTS = { phoTP: 'Lâm Quốc Việt', hieuTruong: 'Trần Diệp Tuấn', scope: 'A', loaiPhieu: '', lapOn: true, tpOn: true, htOn: true };
 
 function loadScript(src) {
   return new Promise((ok, fail) => {
@@ -2098,17 +2375,23 @@ function showTCCBExport() {
   }
   modal.innerHTML = `<div class="modal-box" style="text-align:left;max-width:460px;">
     <h3 style="color:var(--navy);margin:0 0 4px;font-size:1.05rem;text-align:center;">🏛️ Bảng tổng hợp chi thu nhập tăng thêm</h3>
-    <p style="color:var(--gray-600);font-size:13px;margin-bottom:14px;text-align:center;">Tháng <b>${esc(monthLabel(state.hrMonth))}</b> · đúng mẫu Phòng TCCB (.xlsx)</p>
+    <p style="color:var(--gray-600);font-size:13px;margin-bottom:14px;text-align:center;">Tháng <b>${esc(monthLabel(state.hrMonth))}</b> · đúng mẫu Phòng TCNS (.xlsx)</p>
     <label class="form-label" for="tccb-scope">Danh sách gồm</label>
     <select id="tccb-scope" style="margin-bottom:12px;">
       <option value="A"${p.scope === 'A' ? ' selected' : ''}>Mức A — người được TĐV xếp A+ hoặc A</option>
       <option value="all"${p.scope === 'all' ? ' selected' : ''}>Tất cả người đã nộp phiếu</option>
     </select>
+    <label class="form-label" for="tccb-loai">Loại phiếu</label>
+    <select id="tccb-loai" style="margin-bottom:12px;">
+      <option value=""${!p.loaiPhieu ? ' selected' : ''}>Cả hai loại phiếu</option>
+      <option value="HTPV"${p.loaiPhieu === 'HTPV' ? ' selected' : ''}>Chỉ khối hành chính, hỗ trợ, phục vụ</option>
+      <option value="GV"${p.loaiPhieu === 'GV' ? ' selected' : ''}>Chỉ giảng viên, nghiên cứu viên, trợ giảng</option>
+    </select>
     <label class="form-label" for="tccb-date">Ngày lập bảng</label>
     <input type="date" id="tccb-date" value="${todayISO()}" style="margin-bottom:12px;">
     <div class="sub-title" style="margin:4px 0 8px;">Khối chữ ký <span style="text-transform:none;font-weight:500;color:var(--gray-400);">(bỏ chọn để không in khối đó)</span></div>
     ${[['lap', 'Người lập bảng', p.nguoiLap, p.lapOn],
-       ['tp', 'Phòng TCCB (KT. Trưởng phòng – Phó Trưởng phòng)', p.phoTP, p.tpOn],
+       ['tp', 'Phòng TCNS (KT. Trưởng phòng – Phó Trưởng phòng)', p.phoTP, p.tpOn],
        ['ht', 'Hiệu trưởng', p.hieuTruong, p.htOn]].map(([k, label, val, on]) => `
     <label class="sig-check"><input type="checkbox" id="tccb-${k}-on"${on ? ' checked' : ''} onchange="document.getElementById('tccb-${k}').disabled = !this.checked"> ${label}</label>
     <input type="text" id="tccb-${k}" value="${esc(val)}"${on ? '' : ' disabled'} style="margin-bottom:12px;">`).join('')}
@@ -2122,6 +2405,7 @@ function showTCCBExport() {
 async function runTCCBExport() {
   const opts = {
     scope: document.getElementById('tccb-scope').value,
+    loaiPhieu: document.getElementById('tccb-loai').value,
     date: document.getElementById('tccb-date').value || todayISO(),
     nguoiLap: document.getElementById('tccb-lap').value.trim(),
     phoTP: document.getElementById('tccb-tp').value.trim(),
@@ -2131,7 +2415,7 @@ async function runTCCBExport() {
     htOn: document.getElementById('tccb-ht-on').checked
   };
   try {
-    localStorage.setItem('tccb_export', JSON.stringify({ scope: opts.scope, nguoiLap: opts.nguoiLap, phoTP: opts.phoTP, hieuTruong: opts.hieuTruong,
+    localStorage.setItem('tccb_export', JSON.stringify({ scope: opts.scope, loaiPhieu: opts.loaiPhieu, nguoiLap: opts.nguoiLap, phoTP: opts.phoTP, hieuTruong: opts.hieuTruong,
                                                           lapOn: opts.lapOn, tpOn: opts.tpOn, htOn: opts.htOn }));
   } catch (e) {}
   const btn = document.getElementById('btn-tccb-go');
@@ -2139,7 +2423,7 @@ async function runTCCBExport() {
   setBusy(btn, true, '⏳ Đang tạo file...');
   setStatus(st, '', '');
   try {
-    const [data] = await Promise.all([api('getExportTCCB', { month: state.hrMonth }), ensureExcelJS()]);
+    const [data] = await Promise.all([api('getExportTCCB', { month: state.hrMonth, loaiPhieu: opts.loaiPhieu }), ensureExcelJS()]);
     const r = buildTCCBWorkbook(data, opts);
     if (!r.count) {
       setStatus(st, 'warn', opts.scope === 'A'
@@ -2209,7 +2493,7 @@ function buildTCCBWorkbook(data, opts) {
   ws.mergeCells('A3:N3');
   const title = opts.scope === 'all' ? 'BẢNG TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ HIỆU QUẢ CÔNG VIỆC' : 'BẢNG TỔNG HỢP CHI THU NHẬP TĂNG THÊM MỨC A';
   const t3 = ws.getCell('A3');
-  t3.value = `${title}\nDựa trên kết quả đánh giá viên chức người lao động Khối hành chính, phục vụ, hỗ trợ\nTháng ${m} năm ${yyyy}`;
+  t3.value = `${title}\nDựa trên kết quả đánh giá ${opts.loaiPhieu === 'GV' ? 'Giảng viên, Nghiên cứu viên, Trợ giảng' : opts.loaiPhieu === 'HTPV' ? 'viên chức người lao động Khối hành chính, phục vụ, hỗ trợ' : 'viên chức, người lao động, giảng viên, nghiên cứu viên, trợ giảng'}\nTháng ${m} năm ${yyyy}`;
   t3.font = TNR(16, { bold: true }); t3.alignment = center; t3.border = { bottom: thin };
   ws.getRow(3).height = 80.25;
 
@@ -2257,8 +2541,8 @@ function buildTCCBWorkbook(data, opts) {
   // Chữ ký — chỉ in các khối được chọn (vị trí giữ nguyên như mẫu)
   const blocks = [
     { on: opts.lapOn !== false, cols: 'C:E', title: 'NGƯỜI LẬP BẢNG', name: opts.nguoiLap },
-    { on: opts.tpOn !== false,  cols: 'G:J', title: 'PHÒNG TỔ CHỨC CÁN BỘ\nKT. TRƯỞNG PHÒNG\nPHÓ TRƯỞNG PHÒNG', name: opts.phoTP },
-    { on: opts.htOn !== false,  cols: 'L:N', title: 'HIỆU TRƯỞNG', name: opts.hieuTruong }
+    { on: opts.tpOn !== false,  cols: 'G:J', title: 'PHÒNG TỔ CHỨC - NHÂN SỰ\nKT. TRƯỞNG PHÒNG\nPHÓ TRƯỞNG PHÒNG', name: opts.phoTP },
+    { on: opts.htOn !== false,  cols: 'L:N', title: 'HIỆU TRƯỞNG/TRƯỞNG KHOA/TRƯỞNG PHÒNG', name: opts.hieuTruong }
   ].filter(b => b.on);
   if (blocks.length) {
     const sig = (row, height, key) => {
@@ -2275,7 +2559,8 @@ function buildTCCBWorkbook(data, opts) {
     sig(r + 5, 18.75, 'name');
   }
 
-  const fileName = (opts.scope === 'all' ? 'Bang_tong_hop_ket_qua_danh_gia_' : 'Bang_tong_hop_thu_nhap_tang_them_') + `T${m}.${yyyy}.xlsx`;
+  const fileName = (opts.scope === 'all' ? 'Bang_tong_hop_ket_qua_danh_gia_' : 'Bang_tong_hop_thu_nhap_tang_them_') +
+                   (opts.loaiPhieu ? opts.loaiPhieu + '_' : '') + `T${m}.${yyyy}.xlsx`;
   return { wb, fileName, count: stt, pending };
 }
 
@@ -2286,7 +2571,7 @@ function buildTCCBWorkbook(data, opts) {
 document.addEventListener('DOMContentLoaded', () => {
   getDeviceInfo();
   buildScoreRadios();
-  buildFormV2();
+  buildFormV2('HTPV');
   initMonthPicker('mp-home', onHomeMonth);
   initMonthPicker('mp-mgr', m => {
     setStatus(document.getElementById('status-msg-mgr'), '', '');

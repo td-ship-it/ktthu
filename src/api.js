@@ -75,7 +75,7 @@ export async function handleApi(request, env) {
         message:
           "Google từ chối truy cập Web App (" + result.detail + "). Quản trị viên kiểm tra: " +
           "(1) Deploy với 'Ai có quyền truy cập: Bất kỳ ai' (không phải 'Bất kỳ ai có Tài khoản Google'); " +
-          "(2) APPS_SCRIPT_URL phải kết thúc bằng /exec, không phải /dev.",
+          "(2) APPS_SCRIPT_URL phải có dạng https://script.google.com/macros/s/.../exec (không dùng /dev, không dùng dạng /a/macros/<tên miền>/...).",
       },
       502
     );
@@ -115,21 +115,37 @@ const isJson = (t) => { try { JSON.parse(t); return true; } catch { return false
 const POST_TRIES = 3;     // số lần gửi bước (1)
 const ECHO_TRIES = 4;     // số lần lấy kết quả ở bước (2)
 
+const MAX_HOPS = 3;       // số lần Google chuyển hướng sang URL /exec khác (vd. /a/macros/<domain>/...)
+
+// Kết quả của doGet (không phải doPost) — nghĩa là yêu cầu POST đã bị biến thành GET
+const isPingReply = (t) => {
+  try { const j = JSON.parse(t); return !!(j && j.data && j.data.service && !("user" in j.data)); } catch { return false; }
+};
+const isEchoUrl = (u) => { try { return new URL(u).hostname.endsWith("googleusercontent.com"); } catch { return false; } };
+
 export async function callAppsScript(url, payload, opts = {}) {
   const wait = opts.sleep || sleep;
   const body = JSON.stringify(payload);
+  const expectPing = payload && payload.action === "ping";
   let detail = "";
 
   for (let attempt = 0; attempt < POST_TRIES; attempt++) {
     if (attempt) await wait(500 * attempt);
-    let res;
+    let target = url, res;
     try {
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body,
-        redirect: "manual",
-      });
+      // Gửi POST; nếu Google chuyển sang một URL /exec khác thì POST lại tới đó
+      // (không đổi thành GET — GET sẽ chạy doGet và mất dữ liệu đăng nhập)
+      for (let hop = 0; ; hop++) {
+        res = await fetch(target, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+          redirect: "manual",
+        });
+        const loc = res.status >= 300 && res.status < 400 ? res.headers.get("Location") : null;
+        if (!loc || isEchoUrl(loc) || hop >= MAX_HOPS) break;
+        target = new URL(loc, target).toString();
+      }
     } catch (e) {
       detail = "không kết nối được";
       continue;
@@ -138,12 +154,16 @@ export async function callAppsScript(url, payload, opts = {}) {
     // Bước (1) thành công → lấy kết quả ở bước (2), thử lại nhiều lần nếu cần
     if (res.status >= 300 && res.status < 400 && res.headers.get("Location")) {
       const loc = res.headers.get("Location");
+      if (!isEchoUrl(loc)) return { ok: false, denied: true, detail: "Google chuyển hướng tới " + new URL(loc, target).hostname };
       for (let k = 0; k < ECHO_TRIES; k++) {
         if (k) await wait(400 * k);
         try {
           const r2 = await fetch(loc, { method: "GET", redirect: "follow" });
           const t2 = await r2.text();
-          if (isJson(t2)) return { ok: true, text: t2 };
+          if (isJson(t2)) {
+            if (!expectPing && isPingReply(t2)) return { ok: false, denied: true, detail: "Web App trả về doGet thay vì doPost" };
+            return { ok: true, text: t2 };
+          }
           detail = "HTTP " + r2.status + " khi lấy kết quả";
         } catch (e) {
           detail = "mất kết nối khi lấy kết quả";
@@ -154,7 +174,10 @@ export async function callAppsScript(url, payload, opts = {}) {
 
     // Một số trường hợp Google trả thẳng JSON không qua chuyển hướng
     const t = await res.text();
-    if (res.ok && isJson(t)) return { ok: true, text: t };
+    if (res.ok && isJson(t)) {
+      if (!expectPing && isPingReply(t)) return { ok: false, denied: true, detail: "Web App trả về doGet thay vì doPost" };
+      return { ok: true, text: t };
+    }
     detail = "HTTP " + res.status;
     // 401/403: Web App không cho truy cập công khai → lỗi cấu hình, thử lại vô ích
     if (res.status === 401 || res.status === 403) return { ok: false, denied: true, detail };

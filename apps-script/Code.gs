@@ -22,10 +22,19 @@
  * ============================================================
  */
 
+const API_VERSION   = "2026.10.30";   // giao diện so khớp số này để báo khi Apps Script chưa cập nhật
 const SHEET_NHANSU  = "DanhSachNhanSu";
 const SHEET_DANHGIA = "DuLieuDanhGia";
 const SHEET_LOGIN   = "LichSuDangNhap";
 const TZ            = "Asia/Ho_Chi_Minh";
+
+// LOẠI PHIẾU (cột "LoaiPhieu" trong DanhSachNhanSu, mỗi dòng = một vị trí đánh giá của một người):
+//   GV   = giảng viên, nghiên cứu viên, trợ giảng
+//   HTPV = viên chức, người lao động khối hành chính, hỗ trợ, phục vụ (mặc định khi để trống)
+// Một người có thể có nhiều dòng (kiêm nhiệm) → làm nhiều phiếu, mỗi phiếu một loại / một đơn vị.
+const LOAI_GV   = "GV";
+const LOAI_HTPV = "HTPV";
+const LOAI_LABEL = { GV: "Giảng viên, NCV, trợ giảng", HTPV: "Hỗ trợ, phục vụ" };
 
 const COL = {
   THOIGIAN:     0,   // A
@@ -103,7 +112,7 @@ const ROUTES = {
 // ĐIỂM VÀO WEB APP
 // ============================================================
 function doGet() {
-  return json_({ success: true, data: { service: "VC-NLD API", time: new Date().toISOString() } });
+  return json_({ success: true, data: { service: "VC-NLD API", version: API_VERSION, time: new Date().toISOString() } });
 }
 
 function doPost(e) {
@@ -161,7 +170,7 @@ function login_(args, _user, req) {
       return {
         multiUnit: true,
         hoTen: matches[0].hoTen,
-        donViList: matches.map(m => ({ donVi: m.donVi, role: m.role }))
+        donViList: matches.map(m => ({ donVi: m.donVi, role: m.role, loaiPhieu: m.loaiPhieu }))
       };
     }
     const idx = parseInt(args.unitIndex, 10);
@@ -171,7 +180,7 @@ function login_(args, _user, req) {
     chosen = matches[0];
   }
 
-  const user = { msnv: chosen.msnv, hoTen: chosen.hoTen, donVi: chosen.donVi, role: chosen.role };
+  const user = { msnv: chosen.msnv, hoTen: chosen.hoTen, donVi: chosen.donVi, role: chosen.role, loaiPhieu: chosen.loaiPhieu };
   const units = unitList_(matches);
 
   // Người có vai trò Trưởng đơn vị / HR ở BẤT KỲ đơn vị nào đều phải qua OTP,
@@ -278,7 +287,7 @@ function resendOtp_(args, _user, req) {
 }
 
 function unitList_(matches) {
-  return matches.map(m => ({ donVi: m.donVi, role: m.role }));
+  return matches.map(m => ({ donVi: m.donVi, role: m.role, loaiPhieu: m.loaiPhieu }));
 }
 
 /**
@@ -288,15 +297,16 @@ function unitList_(matches) {
 function switchUnit_(args, user, req) {
   const ctx = clientCtx_(req, args);
   const donVi = str_(args.donVi), role = str_(args.role);
+  const loai = args.loaiPhieu ? normLoai_(args.loaiPhieu) : "";
   const matches = findStaff_(user.msnv);
-  const target = matches.find(m => m.donVi === donVi && (!role || m.role === role));
+  const target = matches.find(m => m.donVi === donVi && (!role || m.role === role) && (!loai || m.loaiPhieu === loai));
   if (!target) throw appError_("Không tìm thấy đơn vị này trong danh sách của Quý Thầy/Cô", "BAD_INPUT");
   const mfa = user.mfa === 1;
   if (PRIVILEGED_ROLES.indexOf(target.role) >= 0 && !mfa)
     throw appError_("Vui lòng đăng nhập lại để xác thực OTP cho vai trò này", "AUTH");
 
-  const next = { msnv: target.msnv, hoTen: target.hoTen, donVi: target.donVi, role: target.role };
-  logLogin_(ctx, next, "🔄 Chuyển đơn vị", "Từ: " + user.donVi);
+  const next = { msnv: target.msnv, hoTen: target.hoTen, donVi: target.donVi, role: target.role, loaiPhieu: target.loaiPhieu };
+  logLogin_(ctx, next, "🔄 Chuyển đơn vị", "Từ: " + user.donVi + " (" + (LOAI_LABEL[userLoai_(user)] || "") + ")");
   return { token: signToken_(next, mfa), user: next, units: unitList_(matches) };
 }
 
@@ -306,6 +316,7 @@ function findStaff_(msnv) {
   const h  = sheet.getRange(1, 1, 1, width).getValues()[0].map(str_);
   const iM = h.indexOf("MSNV"), iH = h.indexOf("HoTen"), iD = h.indexOf("DonVi"), iR = h.indexOf("TRUONG DON VI");
   const iE = h.findIndex(x => /^(e-?mail|mail)\b/i.test(x));
+  const iL = h.findIndex(x => /^LOAI ?PHIEU$/.test(normHeader_(x)));
   if (iM < 0 || iH < 0 || iD < 0)
     throw appError_("Sheet " + SHEET_NHANSU + " thiếu cột MSNV / HoTen / DonVi", "CONFIG");
 
@@ -317,6 +328,7 @@ function findStaff_(msnv) {
       hoTen: str_(r[iH]),
       donVi: str_(r[iD]),
       role:  role === "hr" ? "hr" : role === "x" ? "manager" : "staff",
+      loaiPhieu: iL >= 0 ? normLoai_(r[iL]) : LOAI_HTPV,
       email: isEmail_(e) ? e : ""
     };
   });
@@ -571,6 +583,7 @@ function ensureLoginHeader_(sheet) {
   const ck = "loginhdr_" + LOGIN_HEADERS.length;
   if (cache.get(ck)) return;
   cache.put(ck, "1", 6 * 60 * 60);
+  ensureSize_(sheet, 0, LOGIN_HEADERS.length);
   const range = sheet.getRange(1, 1, 1, LOGIN_HEADERS.length);
   const cur = range.getValues()[0].map(str_);
   if (cur.join("|") === LOGIN_HEADERS.join("|")) return;
@@ -624,7 +637,7 @@ const V2COL = (function () {
   const c = { THOIGIAN: 0, THANG: 1, MSNV: 2, HOTEN: 3, DONVI: 4, DIEM: 5 };
   let n = 5 + V2_KEYS.length;
   ["TONGKPI", "THUONG", "MOTATHUONG", "TONGDIEM", "XEPLOAI", "CANCUVUOT", "LYDO",
-   "SEPTHUONG", "SEPDIEM", "SEPLOAI", "SEPGHICHU"].forEach(k => { c[k] = n++; });
+   "SEPTHUONG", "SEPDIEM", "SEPLOAI", "SEPGHICHU", "LOAIPHIEU"].forEach(k => { c[k] = n++; });
   c.TOTAL = n;
   return c;
 })();
@@ -632,7 +645,7 @@ const V2_TOTAL_COLS = V2COL.TOTAL;
 const V2_TAIL_HEADERS = [
   "Tổng KPI (I+II)", "Thưởng đề xuất", "Mô tả cách làm hay & minh chứng", "Tổng điểm (≤100)",
   "Tự xếp loại", "Căn cứ xác nhận vượt mức (A+)", "Ghi chú xếp loại",
-  "Thưởng TĐV công nhận", "Điểm TĐV", "TĐV xếp loại", "Ghi chú TĐV"
+  "Thưởng TĐV công nhận", "Điểm TĐV", "TĐV xếp loại", "Ghi chú TĐV", "Loại phiếu"
 ];
 const V2_HEADERS = ["Thời gian", "Tháng đánh giá", "MSNV", "Họ tên", "Đơn vị"]
   .concat(V2_KEYS.map(k => V2_RULES[k].label), V2_TAIL_HEADERS);
@@ -668,6 +681,7 @@ function getV2Sheet_(create) {
   let sh = ss.getSheetByName(SHEET_DANHGIA_V2);
   if (!sh && create) {
     sh = ss.insertSheet(SHEET_DANHGIA_V2);
+    ensureSize_(sh, 0, V2_TOTAL_COLS);
     sh.getRange(1, 1, 1, V2_TOTAL_COLS).setValues([V2_HEADERS])
       .setBackground("#0f2557").setFontColor("white").setFontWeight("bold").setWrap(true);
     sh.setFrozenRows(1);
@@ -676,12 +690,35 @@ function getV2Sheet_(create) {
   return sh;
 }
 
+/** Chuẩn hóa loại phiếu: "GV" hoặc "HTPV" (trống / không nhận ra → HTPV, giữ tương thích dữ liệu cũ) */
+function normLoai_(v) {
+  const s = str_(v).toLowerCase();
+  return (s === "gv" || s.indexOf("giảng viên") === 0 || s.indexOf("giang vien") === 0) ? LOAI_GV : LOAI_HTPV;
+}
+function userLoai_(user) { return normLoai_(user && user.loaiPhieu); }
+function rowLoaiV2_(r) { return normLoai_(r[V2COL.LOAIPHIEU]); }
+
 function rowMonthV2_(r) { return normalizeMonth_(r[V2COL.THANG]); }
 function rowOwnedV2_(r, user) { return matchesId_(r[V2COL.MSNV], user.msnv); }
+/**
+ * Một "vị trí đánh giá" = MSNV + đơn vị + loại phiếu. Mỗi vị trí chỉ nộp được 1 phiếu / tháng.
+ * (Người kiêm nhiệm làm nhiều phiếu: khác đơn vị hoặc khác loại phiếu thì không bị coi là trùng.)
+ */
+function sameSlotV2_(r, user, month) {
+  return rowOwnedV2_(r, user) && rowMonthV2_(r) === month &&
+         str_(r[V2COL.DONVI]) === user.donVi && rowLoaiV2_(r) === userLoai_(user);
+}
 function hasEntryV2_(data, user, month) {
   for (let i = 1; i < data.length; i++)
-    if (rowOwnedV2_(data[i], user) && rowMonthV2_(data[i]) === month) return true;
+    if (sameSlotV2_(data[i], user, month)) return true;
   return false;
+}
+/** Bảo đảm tiêu đề cột "Loại phiếu" có mặt ở sheet đã tạo từ trước khi có cột này */
+function ensureLoaiHeaderV2_(sheet) {
+  ensureSize_(sheet, 0, V2_TOTAL_COLS);
+  const cell = sheet.getRange(1, V2COL.LOAIPHIEU + 1);
+  if (str_(cell.getValue()) !== "Loại phiếu")
+    cell.setValue("Loại phiếu").setBackground("#0f2557").setFontColor("white").setFontWeight("bold").setWrap(true);
 }
 
 function numOrBlank_(v) {
@@ -710,7 +747,8 @@ function mapRowV2_(r, i) {
     sepThuong:   numOrBlank_(r[V2COL.SEPTHUONG]),
     sepDiem:     numOrBlank_(r[V2COL.SEPDIEM]),
     sepLoai:     str_(r[V2COL.SEPLOAI]),
-    sepGhiChu:   str_(r[V2COL.SEPGHICHU])
+    sepGhiChu:   str_(r[V2COL.SEPGHICHU]),
+    loaiPhieu:   rowLoaiV2_(r)
   };
 }
 
@@ -718,7 +756,7 @@ function reportRowV2_(it, idx) {
   return [idx + 1, it.hoTen, it.donVi]
     .concat(V2_KEYS.map(k => it.diem[k]))
     .concat([it.tongKpi, it.thuong, it.moTaThuong, it.tongDiem, it.xepLoai,
-             it.canCuVuot, it.lyDo, it.sepThuong, it.sepDiem, it.sepLoai, it.sepGhiChu]);
+             it.canCuVuot, it.lyDo, it.sepThuong, it.sepDiem, it.sepLoai, it.sepGhiChu, LOAI_LABEL[it.loaiPhieu] || it.loaiPhieu]);
 }
 
 function saveDataV2_(form, user, month) {
@@ -756,8 +794,10 @@ function saveDataV2_(form, user, month) {
 
   return withLock_(() => {
     const sheet = getV2Sheet_(true);
-    if (userRowsV2_(sheet, user).some(x => rowMonthV2_(x.r) === month && str_(x.r[V2COL.DONVI]) === user.donVi))
-      throw appError_("Bạn đã gửi đánh giá tháng " + month.replace("-", "/") + " tại " + user.donVi + " rồi!", "DUPLICATE");
+    ensureLoaiHeaderV2_(sheet);
+    if (userRowsV2_(sheet, user).some(x => sameSlotV2_(x.r, user, month)))
+      throw appError_("Bạn đã gửi phiếu " + (LOAI_LABEL[userLoai_(user)] || "") + " tháng " + month.replace("-", "/") +
+                      " tại " + user.donVi + " rồi!", "DUPLICATE");
 
     const row = new Array(V2_TOTAL_COLS).fill("");
     row[V2COL.THOIGIAN]   = new Date();
@@ -773,8 +813,10 @@ function saveDataV2_(form, user, month) {
     row[V2COL.XEPLOAI]    = g.grade;
     row[V2COL.CANCUVUOT]  = safeCell_(canCu);
     row[V2COL.LYDO]       = g.reasons.join("; ");
+    row[V2COL.LOAIPHIEU]  = userLoai_(user);
 
     const newRow = sheet.getLastRow() + 1;
+    ensureSize_(sheet, newRow, V2_TOTAL_COLS);
     sheet.getRange(newRow, V2COL.THANG + 1, 1, 2).setNumberFormat("@");
     sheet.getRange(newRow, 1, 1, V2_TOTAL_COLS).setValues([row]);
     SpreadsheetApp.flush();
@@ -796,6 +838,7 @@ function listV2_(month, donVi) {
  */
 function writeBlock_(sheet, writes, col, width) {
   writes = writes.slice().sort((a, b) => a.row - b.row);
+  ensureSize_(sheet, 0, col + width - 1);
   for (let i = 0; i < writes.length;) {
     let j = i;
     while (j + 1 < writes.length && writes[j + 1].row - writes[j].row <= 25) j++;
@@ -834,7 +877,10 @@ function updateManagerV2_(items, user, month) {
     const rows = monthRowsV2_(sheet, month).filter(x => str_(x.r[V2COL.DONVI]) === user.donVi);
     const byRow = {};
     rows.forEach(x => { byRow[x.row] = x; });
-    const owns = (x, it) => it.msnv ? matchesId_(x.r[V2COL.MSNV], it.msnv) : str_(x.r[V2COL.HOTEN]) === it.hoTen;
+    const owns = (x, it) => {
+      if (it.loaiPhieu && rowLoaiV2_(x.r) !== normLoai_(it.loaiPhieu)) return false;
+      return it.msnv ? matchesId_(x.r[V2COL.MSNV], it.msnv) : str_(x.r[V2COL.HOTEN]) === it.hoTen;
+    };
 
     // Kiểm tra hết trước, rồi mới ghi (tránh ghi dở dang khi một dòng lỗi)
     const missing = [];
@@ -863,7 +909,7 @@ function checkDoubleEntry_(args, user) {
   const month = requireMonth_(args.month);
   if (isV2Month_(month)) {
     const sh = getV2Sheet_(false);
-    return sh ? userRowsV2_(sh, user).some(x => rowMonthV2_(x.r) === month && str_(x.r[V2COL.DONVI]) === user.donVi) : false;
+    return sh ? userRowsV2_(sh, user).some(x => sameSlotV2_(x.r, user, month)) : false;
   }
   const sheet = getSheet_(SHEET_DANHGIA, true);
   if (!sheet) return false;
@@ -932,6 +978,7 @@ function saveData_(args, user) {
 
     const newRow = sheet.getLastRow() + 1;
     // Ép plain text TRƯỚC khi ghi để Sheets không tự đổi "09-2026" / MSNV thành số, ngày
+    ensureSize_(sheet, newRow, TOTAL_COLS);
     sheet.getRange(newRow, COL.THANGDANHGIA + 1).setNumberFormat("@");
     sheet.getRange(newRow, COL.MSNV + 1).setNumberFormat("@");
     sheet.getRange(newRow, 1, 1, TOTAL_COLS).setValues([row]);
@@ -1019,6 +1066,7 @@ function parseMgrItem_(it) {
   return {
     rowId: parseInt(it.rowId, 10) || 0,
     msnv: str_(it.msnv),
+    loaiPhieu: str_(it.loaiPhieu),
     hoTen: hoTen,
     sepDiem: sepDiem,
     sepLoai: sepLoai,
@@ -1041,6 +1089,7 @@ function getUserHistory_(_args, user) {
       out.push({
         thang: thang,
         donVi: str_(r[V2COL.DONVI]),
+        loaiPhieu: rowLoaiV2_(r),
         tongDiem: cellOut_(r[V2COL.TONGDIEM]),
         xepLoai: str_(r[V2COL.XEPLOAI]),
         sepLoai: str_(r[V2COL.SEPLOAI])
@@ -1057,6 +1106,7 @@ function getUserHistory_(_args, user) {
     out.push({
       thang: thang,
       donVi: str_(r[COL.DONVI]),
+      loaiPhieu: "",   // phiếu cũ (trước 10/2026) chưa phân loại
       tongDiem: cellOut_(r[COL.TONGDIEM]),
       xepLoai: str_(r[COL.XEPLOAI]),
       sepLoai: str_(r[COL.SEPLOAI])
@@ -1105,6 +1155,7 @@ function buildReportSheet_(month) {
   const rows = v2 ? data.map(reportRowV2_)
                   : data.map((it, idx) => [idx + 1, it.hoTen, it.donVi].concat(it.chiTiet, [it.sepDiem, it.sepLoai, it.sepGhiChu]));
   const w = headers.length;
+  ensureSize_(report, rows.length + 1, w);
   report.getRange(1, 1, 1, w).setValues([headers])
         .setBackground("#0f2557").setFontColor("white").setFontWeight("bold");
   report.getRange(2, 1, rows.length, w).setValues(rows)
@@ -1146,7 +1197,8 @@ function staffInfoMap_() {
 function getExportTCCB_(args) {
   const month = requireMonth_(args.month);
   const v2 = isV2Month_(month);
-  const list = listAll_(month);
+  const want = args.loaiPhieu ? normLoai_(args.loaiPhieu) : "";   // "" = cả hai loại
+  const list = listAll_(month).filter(it => !want || !v2 || it.loaiPhieu === want);
   const info = staffInfoMap_();
   const rows = list.map(it => {
     const id = normalizeId_(it.msnv);
@@ -1160,6 +1212,7 @@ function getExportTCCB_(args) {
     }
     return {
       msnv: it.msnv, hoTen: it.hoTen, chucDanh: inf.chucDanh, boMon: it.donVi, donViLon: inf.donViLon,
+      loaiPhieu: it.loaiPhieu || "",
       tongDiem: it.tongDiem, xepLoai: it.xepLoai, yKien: yKien,
       sepDiem: it.sepDiem, sepLoai: it.sepLoai, sepGhiChu: it.sepGhiChu
     };
@@ -1184,7 +1237,7 @@ function exportCSVData_(args) {
     lines.push(row.map(escape).join(","));
   });
 
-  const csv = "\uFEFF" + lines.join("\r\n");
+  const csv = "\uFEFF" + lines.join("\r\n") + "\r\n";
   return {
     base64: Utilities.base64Encode(Utilities.newBlob(csv, "text/csv").getBytes()),
     fileName: "BaoCao_" + month + ".csv",
@@ -1230,6 +1283,7 @@ function sign_(body) {
 function signToken_(user, mfa) {
   const payload = {
     msnv: user.msnv, hoTen: user.hoTen, donVi: user.donVi, role: user.role,
+    loaiPhieu: userLoai_(user),
     mfa: mfa ? 1 : 0,
     exp: Math.floor(Date.now() / 1000) + TOKEN_TTL_SEC
   };
@@ -1266,7 +1320,7 @@ function checkProxyKey_(key) {
 /** Số dòng (1-based) có ô ở cột `col` (0-based) khớp `text` */
 function findRows_(sheet, col, text, exact) {
   const last = sheet.getLastRow();
-  if (last < 2 || !str_(text)) return [];
+  if (last < 2 || !str_(text) || col + 1 > sheet.getLastColumn()) return [];
   let tf = sheet.getRange(2, col + 1, last - 1, 1).createTextFinder(String(text));
   if (exact !== false) tf = tf.matchEntireCell(true);
   return tf.findAll().map(c => c.getRow());
@@ -1275,14 +1329,17 @@ function findRows_(sheet, col, text, exact) {
 function readRows_(sheet, rows, width) {
   rows = Array.from(new Set(rows)).sort((a, b) => a - b);
   const out = [];
+  if (!rows.length) return out;
+  const w = Math.min(width, sheet.getMaxColumns());
+  const pad = r => { while (r.length < width) r.push(""); return r; };
   for (let i = 0; i < rows.length;) {
     let j = i;
     while (j + 1 < rows.length && rows[j + 1] - rows[j] <= 25) j++;
     const start = rows[i], end = rows[j];
     const want = {};
     rows.slice(i, j + 1).forEach(r => { want[r] = true; });
-    sheet.getRange(start, 1, end - start + 1, width).getValues()
-      .forEach((r, k) => { if (want[start + k]) out.push({ row: start + k, r: r }); });
+    sheet.getRange(start, 1, end - start + 1, w).getValues()
+      .forEach((r, k) => { if (want[start + k]) out.push({ row: start + k, r: pad(r) }); });
     i = j + 1;
   }
   return out;
@@ -1312,6 +1369,16 @@ function userRowsV1_(sheet, user) {
   return readRows_(sheet, rows, TOTAL_COLS).filter(x => rowOwnedBy_(x.r, user));
 }
 
+/**
+ * Đảm bảo sheet đủ số dòng/cột trước khi ghi. Sheet mới của Google chỉ có 1000 dòng × 26 cột,
+ * ghi vượt quá sẽ báo "outside the dimensions of the sheet".
+ */
+function ensureSize_(sheet, rows, cols) {
+  const mr = sheet.getMaxRows(), mc = sheet.getMaxColumns();
+  if (rows && rows > mr) sheet.insertRowsAfter(mr, rows - mr + 200);   // thêm dư 200 dòng
+  if (cols && cols > mc) sheet.insertColumnsAfter(mc, cols - mc);
+}
+
 // Script properties: đọc 1 lần cho mỗi yêu cầu
 let PROPS_CACHE_ = null;
 function prop_(k) {
@@ -1323,6 +1390,7 @@ function prop_(k) {
 // HELPERS
 // ============================================================
 function json_(obj) {
+  obj.v = API_VERSION;
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -1536,6 +1604,79 @@ function migrateAddThangDanhGiaColumn() {
   rg.setNumberFormat("@");
   rg.setValues(values);
   notify_("✅ Migration hoàn tất! Đã điền " + values.length + " dòng. Kiểm tra và chỉnh tay nếu cần.");
+}
+
+/**
+ * CHẠY 1 LẦN sau khi cập nhật code (bản gộp phiếu Giảng viên + Hỗ trợ phục vụ):
+ *  • DanhSachNhanSu: thêm cột "LoaiPhieu" (nếu chưa có), ô trống điền "HTPV".
+ *  • DuLieuDanhGia_KPI: thêm tiêu đề cột "Loại phiếu" (cột cuối), ô trống của dòng có dữ liệu điền "HTPV".
+ * Sau đó sửa tay cột LoaiPhieu = GV cho những dòng là giảng viên / nghiên cứu viên / trợ giảng.
+ * An toàn khi chạy lại: chỉ điền ô đang trống, không ghi đè giá trị đã có.
+ */
+function setupLoaiPhieu() {
+  const ns = getSheet_(SHEET_NHANSU);
+  const width = ns.getLastColumn();
+  const head = ns.getRange(1, 1, 1, width).getValues()[0].map(str_);
+  const iM = head.indexOf("MSNV");
+  if (iM < 0) { notify_("❌ Sheet " + SHEET_NHANSU + " thiếu cột MSNV"); return; }
+  let iL = head.findIndex(x => /^LOAI ?PHIEU$/.test(normHeader_(x)));
+  if (iL < 0) {
+    iL = width;
+    ensureSize_(ns, 0, iL + 1);
+    ns.getRange(1, iL + 1).setValue("LoaiPhieu").setFontWeight("bold");
+  }
+  let nsFilled = 0;
+  const last = ns.getLastRow();
+  if (last >= 2) {
+    const ids  = ns.getRange(2, iM + 1, last - 1, 1).getValues();
+    const rg   = ns.getRange(2, iL + 1, last - 1, 1);
+    const vals = rg.getValues();
+    for (let i = 0; i < vals.length; i++)
+      if (str_(ids[i][0]) && !str_(vals[i][0])) { vals[i][0] = LOAI_HTPV; nsFilled++; }
+    rg.setValues(vals);
+  }
+
+  let kpiFilled = 0;
+  const sh = getV2Sheet_(false);
+  if (sh) {
+    ensureLoaiHeaderV2_(sh);
+    const lastK = sh.getLastRow();
+    if (lastK >= 2) {
+      const rg   = sh.getRange(2, V2COL.LOAIPHIEU + 1, lastK - 1, 1);
+      const vals = rg.getValues();
+      const msnv = sh.getRange(2, V2COL.MSNV + 1, lastK - 1, 1).getValues();
+      for (let i = 0; i < vals.length; i++)
+        if (str_(msnv[i][0]) && !str_(vals[i][0])) { vals[i][0] = LOAI_HTPV; kpiFilled++; }
+      rg.setValues(vals);
+    }
+  }
+  notify_("✅ setupLoaiPhieu xong.\n• " + SHEET_NHANSU + ": điền HTPV cho " + nsFilled + " dòng trống\n• " +
+          SHEET_DANHGIA_V2 + ": điền HTPV cho " + kpiFilled + " phiếu\n\nTiếp theo: sửa cột LoaiPhieu = GV cho giảng viên / nghiên cứu viên / trợ giảng.");
+}
+
+/**
+ * Liệt kê những người có nhiều vị trí đánh giá (kiêm nhiệm) để rà soát cột LoaiPhieu / DonVi / TRUONG DON VI.
+ */
+function listMultiRole() {
+  const data = getSheet_(SHEET_NHANSU).getDataRange().getValues();
+  const h  = data[0].map(str_);
+  const iM = h.indexOf("MSNV"), iH = h.indexOf("HoTen"), iD = h.indexOf("DonVi"), iR = h.indexOf("TRUONG DON VI");
+  const iL = h.findIndex(x => /^LOAI ?PHIEU$/.test(normHeader_(x)));
+  if (iM < 0 || iH < 0 || iD < 0) { notify_("❌ Sheet " + SHEET_NHANSU + " thiếu cột MSNV / HoTen / DonVi"); return; }
+  const by = {};
+  for (let i = 1; i < data.length; i++) {
+    const id = normalizeId_(data[i][iM]);
+    if (!id) continue;
+    const r = iR >= 0 ? str_(data[i][iR]).toLowerCase() : "";
+    const slot = str_(data[i][iD]) + " [" + (iL >= 0 ? normLoai_(data[i][iL]) : LOAI_HTPV) +
+                 (r === "x" ? ", Trưởng ĐV" : r === "hr" ? ", HR" : "") + "]";
+    (by[id] = by[id] || { name: str_(data[i][iH]), slots: [] }).slots.push(slot);
+  }
+  const out = Object.keys(by).filter(k => by[k].slots.length > 1)
+    .map(k => by[k].name + " (" + k + "): " + by[k].slots.join("  |  "));
+  notify_(out.length ? "👥 " + out.length + " người có nhiều vị trí đánh giá:\n" + out.slice(0, 60).join("\n") +
+                       (out.length > 60 ? "\n..." : "")
+                     : "Không có ai có nhiều vị trí đánh giá.");
 }
 
 /**
