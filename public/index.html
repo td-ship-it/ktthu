@@ -648,10 +648,10 @@ const SCORE_NAMES = ['diem_2_1','diem_2_2','diem_2_3','diem_2_4','diem_2_5','die
 const GRADES = ['A+','A','B','C'];
 const GRADE_COLORS = { 'A+':'#f59e0b', 'A':'#10b981', 'B':'#1a56db', 'C':'#ef4444' };
 const ROLE_LABEL = { hr:'Tổ chức cán bộ', manager:'Trưởng đơn vị', staff:'VC-NLĐ' };
-// Loại phiếu: GV = giảng viên, nghiên cứu viên, trợ giảng · HTPV = khối hành chính, hỗ trợ, phục vụ
+// Loại phiếu: GV = giảng viên, nghiên cứu viên, trợ giảng · HCHTPV = khối hành chính, hỗ trợ, phục vụ
 // Một vị trí đánh giá = (đơn vị + loại phiếu); người kiêm nhiệm có nhiều vị trí, mỗi vị trí một phiếu / tháng.
-const LOAI_LABEL = { GV: 'Giảng viên, NCV, trợ giảng', HTPV: 'Hỗ trợ, phục vụ' };
-const loaiOf = u => (u && u.loaiPhieu === 'GV') ? 'GV' : 'HTPV';
+const LOAI_LABEL = { GV: 'Giảng viên, NCV, trợ giảng', HCHTPV: 'Hành chính, hỗ trợ, phục vụ' };
+const loaiOf = u => (u && u.loaiPhieu === 'GV') ? 'GV' : 'HCHTPV';
 const loaiTag = r => r && r.loaiPhieu ? `<span class="loai-tag ${r.loaiPhieu === 'GV' ? 'gv' : 'htpv'}">${r.loaiPhieu}</span>` : '';
 /** Dòng lịch sử r thuộc vị trí u? (phiếu cũ chưa phân loại: chỉ so đơn vị) */
 const slotMatch = (r, u) => r.donVi === u.donVi && (!r.loaiPhieu || r.loaiPhieu === loaiOf(u));
@@ -1532,8 +1532,8 @@ const V2_LABEL = { i11:'1.1', i12:'1.2', i13:'1.3', i14:'1.4', i15:'1.5',
 // Điểm thưởng tối đa đủ 7 điểm — giống bonusCap_ ở backend
 function bonusCap(_kpi) { return BONUS_MAX; }
 
-// ---- Mẫu phiếu khối hành chính, hỗ trợ, phục vụ (HTPV) ----
-const V2_FORM_HTPV = [
+// ---- Mẫu phiếu khối hành chính, hỗ trợ, phục vụ (HCHTPV) ----
+const V2_FORM_HCHTPV = [
   { part: 'I. Tiêu chí chung (30 điểm)', groups: [
     { title: '1. Phẩm chất chính trị, phẩm chất đạo đức và ý thức kỷ luật, kỷ cương trong thực thi nhiệm vụ (10 điểm)',
       crits: [
@@ -1726,10 +1726,10 @@ const V2_FORM_GV = [
   ] }
 ];
 
-const V2_FORMS = { HTPV: V2_FORM_HTPV, GV: V2_FORM_GV };
+const V2_FORMS = { HCHTPV: V2_FORM_HCHTPV, GV: V2_FORM_GV };
 // Hai mẫu cùng cấu trúc điểm (cùng V2_KEYS); chỉ khác chữ tiêu chí. Điểm chấm và cách xếp loại giống nhau.
 const V2_TEXT = {
-  HTPV: {
+  HCHTPV: {
     title: 'Tiêu chí đánh giá hiệu quả công việc hàng tháng đối với VC, NLĐ khối hành chính, hỗ trợ, phục vụ',
     bonus: 'Có cách làm hay, phương pháp mới trong lĩnh vực được giao, được áp dụng hiệu quả và có thể nhân rộng trong bộ môn/đơn vị/ĐHYD'
   },
@@ -1760,7 +1760,7 @@ function scoreBoxHtml(sc, compact) {
 }
 
 function buildFormV2(type) {
-  type = type === 'GV' ? 'GV' : 'HTPV';
+  type = type === 'GV' ? 'GV' : 'HCHTPV';
   state.v2Type = type;
   const T = V2_TEXT[type];
   document.getElementById('v2-title').textContent = T.title;
@@ -2246,7 +2246,7 @@ function renderHRDashboard(data, month) {
   const byUnit = groupByUnit(data);
   const units = Object.keys(byUnit).sort((a, b) => a.localeCompare(b, 'vi'));
   const dashCell = v => `<td class="c">${v || '-'}</td>`;
-  const nGV = data.filter(r => r.loaiPhieu === 'GV').length, nHT = data.filter(r => r.loaiPhieu === 'HTPV').length;
+  const nGV = data.filter(r => r.loaiPhieu === 'GV').length, nHT = data.filter(r => r.loaiPhieu === 'HCHTPV').length;
   const loaiNote = (nGV || nHT) ? ` (${nGV} phiếu giảng viên · ${nHT} phiếu hỗ trợ, phục vụ)` : '';
   document.getElementById('hr-dashboard-content').innerHTML = `
     <div style="font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:14px;">
@@ -2384,7 +2384,7 @@ function showTCCBExport() {
     <label class="form-label" for="tccb-loai">Loại phiếu</label>
     <select id="tccb-loai" style="margin-bottom:12px;">
       <option value=""${!p.loaiPhieu ? ' selected' : ''}>Cả hai loại phiếu</option>
-      <option value="HTPV"${p.loaiPhieu === 'HTPV' ? ' selected' : ''}>Chỉ khối hành chính, hỗ trợ, phục vụ</option>
+      <option value="HCHTPV"${p.loaiPhieu === 'HCHTPV' ? ' selected' : ''}>Chỉ khối hành chính, hỗ trợ, phục vụ</option>
       <option value="GV"${p.loaiPhieu === 'GV' ? ' selected' : ''}>Chỉ giảng viên, nghiên cứu viên, trợ giảng</option>
     </select>
     <label class="form-label" for="tccb-date">Ngày lập bảng</label>
@@ -2493,7 +2493,7 @@ function buildTCCBWorkbook(data, opts) {
   ws.mergeCells('A3:N3');
   const title = opts.scope === 'all' ? 'BẢNG TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ HIỆU QUẢ CÔNG VIỆC' : 'BẢNG TỔNG HỢP CHI THU NHẬP TĂNG THÊM MỨC A';
   const t3 = ws.getCell('A3');
-  t3.value = `${title}\nDựa trên kết quả đánh giá ${opts.loaiPhieu === 'GV' ? 'Giảng viên, Nghiên cứu viên, Trợ giảng' : opts.loaiPhieu === 'HTPV' ? 'viên chức người lao động Khối hành chính, phục vụ, hỗ trợ' : 'viên chức, người lao động, giảng viên, nghiên cứu viên, trợ giảng'}\nTháng ${m} năm ${yyyy}`;
+  t3.value = `${title}\nDựa trên kết quả đánh giá ${opts.loaiPhieu === 'GV' ? 'Giảng viên, Nghiên cứu viên, Trợ giảng' : opts.loaiPhieu === 'HCHTPV' ? 'viên chức người lao động Khối hành chính, phục vụ, hỗ trợ' : 'viên chức, người lao động, giảng viên, nghiên cứu viên, trợ giảng'}\nTháng ${m} năm ${yyyy}`;
   t3.font = TNR(16, { bold: true }); t3.alignment = center; t3.border = { bottom: thin };
   ws.getRow(3).height = 80.25;
 
@@ -2571,7 +2571,7 @@ function buildTCCBWorkbook(data, opts) {
 document.addEventListener('DOMContentLoaded', () => {
   getDeviceInfo();
   buildScoreRadios();
-  buildFormV2('HTPV');
+  buildFormV2('HCHTPV');
   initMonthPicker('mp-home', onHomeMonth);
   initMonthPicker('mp-mgr', m => {
     setStatus(document.getElementById('status-msg-mgr'), '', '');

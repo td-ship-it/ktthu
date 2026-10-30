@@ -134,26 +134,26 @@ Trang **Dashboard** của HR có nút **🏛️ Bảng tổng hợp chi thu nh�
 
 ## Hai loại phiếu trong một ứng dụng (bản gộp 2026.10.30)
 
-Một ứng dụng dùng cho cả **giảng viên, nghiên cứu viên, trợ giảng** (phiếu `GV`) và **khối hành chính, hỗ trợ, phục vụ** (phiếu `HTPV`). Hai mẫu phiếu cùng cấu trúc điểm (`V2_KEYS`), chỉ khác chữ tiêu chí; nội dung từng mẫu ghi nguyên văn như hai ứng dụng trước (`V2_FORM_HTPV`, `V2_FORM_GV` trong `public/index.html`).
+Một ứng dụng dùng cho cả **giảng viên, nghiên cứu viên, trợ giảng** (phiếu `GV`) và **khối hành chính, hỗ trợ, phục vụ** (phiếu `HCHTPV`). Hai mẫu phiếu cùng cấu trúc điểm (`V2_KEYS`), chỉ khác chữ tiêu chí; nội dung từng mẫu ghi nguyên văn như hai ứng dụng trước (`V2_FORM_HCHTPV`, `V2_FORM_GV` trong `public/index.html`).
 
-**Vị trí đánh giá.** Mỗi dòng trong `DanhSachNhanSu` là một *vị trí đánh giá* = (người, đơn vị, loại phiếu). Thêm cột **`LoaiPhieu`** với giá trị `GV` hoặc `HTPV` (để trống = `HTPV`). Một người kiêm nhiệm thì có nhiều dòng, mỗi dòng một vị trí:
+**Vị trí đánh giá.** Mỗi dòng trong `DanhSachNhanSu` là một *vị trí đánh giá* = (người, đơn vị, loại phiếu). Thêm cột **`LoaiPhieu`** với giá trị `GV` hoặc `HCHTPV` (để trống = `HCHTPV`). Một người kiêm nhiệm thì có nhiều dòng, mỗi dòng một vị trí:
 
 | MSNV | HoTen | DonVi | TRUONG DON VI | LoaiPhieu |
 |---|---|---|---|---|
 | 002 | Nguyễn Đức Tuấn | Bộ môn X | | GV |
-| 002 | Nguyễn Đức Tuấn | Bộ môn X | x | HTPV |
-| 002 | Nguyễn Đức Tuấn | Trường Dược | x | HTPV |
+| 002 | Nguyễn Đức Tuấn | Bộ môn X | x | HCHTPV |
+| 002 | Nguyễn Đức Tuấn | Trường Dược | x | HCHTPV |
 
-- Mỗi vị trí nộp **một phiếu mỗi tháng**. Khóa chống nộp trùng là *mã số + đơn vị + **loại phiếu** + tháng*, nên phiếu `GV` và phiếu `HTPV` cùng một bộ môn không chặn nhau.
+- Mỗi vị trí nộp **một phiếu mỗi tháng**. Khóa chống nộp trùng là *mã số + đơn vị + **loại phiếu** + tháng*, nên phiếu `GV` và phiếu `HCHTPV` cùng một bộ môn không chặn nhau.
 - Đăng nhập: người có nhiều vị trí chọn vị trí; về sau dùng **🔄 Chuyển đơn vị**. Trang **Tự đánh giá** hiện thêm danh sách *"Các phiếu của Thầy/Cô tháng …"*, mỗi vị trí đánh dấu ✅ đã nộp / ⏳ chưa nộp và có nút chuyển nhanh, để không ai bỏ sót phiếu kiêm nhiệm.
 - Lịch sử cá nhân, bảng chấm của Trưởng đơn vị và báo cáo HR đều có nhãn/cột **Loại phiếu**. Một người có hai phiếu trong cùng đơn vị thì hiện thành hai dòng, điểm Trưởng đơn vị chấm vào đúng từng phiếu.
-- Bảng tổng hợp chi thu nhập tăng thêm (TCCB) có ô chọn **Loại phiếu**: cả hai / chỉ HTPV / chỉ GV; tiêu đề và tên file đổi theo.
-- Dữ liệu vẫn lưu ở `DuLieuDanhGia_KPI`, thêm **cột cuối "Loại phiếu"** (cột 37). Dòng cũ để trống được hiểu là `HTPV`. Phiếu tháng trước 10/2026 (mẫu cũ) không phân loại.
+- Bảng tổng hợp chi thu nhập tăng thêm (TCCB) có ô chọn **Loại phiếu**: cả hai / chỉ HCHTPV / chỉ GV; tiêu đề và tên file đổi theo.
+- Dữ liệu vẫn lưu ở `DuLieuDanhGia_KPI`, thêm **cột cuối "Loại phiếu"** (cột 37). Dòng cũ để trống được hiểu là `HCHTPV`. Phiếu tháng trước 10/2026 (mẫu cũ) không phân loại.
 
 ### Cài đặt (làm 1 lần)
 
 1. Dán `apps-script/Code.gs` mới vào Apps Script → **Deploy → Manage deployments → ✏️ → New version → Deploy**.
-2. Chạy hàm **`setupLoaiPhieu`**: thêm cột `LoaiPhieu` vào `DanhSachNhanSu` và cột "Loại phiếu" vào `DuLieuDanhGia_KPI`, ô trống điền `HTPV` (chạy lại an toàn, không ghi đè ô đã có).
+2. Chạy hàm **`setupLoaiPhieu`**: thêm cột `LoaiPhieu` vào `DanhSachNhanSu` và cột "Loại phiếu" vào `DuLieuDanhGia_KPI`, ô trống điền `HCHTPV` (chạy lại an toàn, không ghi đè ô đã có).
 3. Sửa cột `LoaiPhieu` = `GV` cho các dòng giảng viên / nghiên cứu viên / trợ giảng. Với người kiêm nhiệm, thêm dòng cho từng vị trí như bảng trên.
 4. Chạy hàm **`listMultiRole`** để xem danh sách người có nhiều vị trí và rà soát lần cuối.
 5. Push `public/index.html` lên GitHub để Cloudflare triển khai lại. Chân trang phải hiện *phiên bản 2026.10.30*; nếu Apps Script chưa cập nhật, trang hiện dải vàng cảnh báo.

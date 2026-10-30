@@ -30,11 +30,11 @@ const TZ            = "Asia/Ho_Chi_Minh";
 
 // LOẠI PHIẾU (cột "LoaiPhieu" trong DanhSachNhanSu, mỗi dòng = một vị trí đánh giá của một người):
 //   GV   = giảng viên, nghiên cứu viên, trợ giảng
-//   HTPV = viên chức, người lao động khối hành chính, hỗ trợ, phục vụ (mặc định khi để trống)
+//   HCHTPV = viên chức, người lao động khối hành chính, hỗ trợ, phục vụ (mặc định khi để trống)
 // Một người có thể có nhiều dòng (kiêm nhiệm) → làm nhiều phiếu, mỗi phiếu một loại / một đơn vị.
 const LOAI_GV   = "GV";
-const LOAI_HTPV = "HTPV";
-const LOAI_LABEL = { GV: "Giảng viên, NCV, trợ giảng", HTPV: "Hỗ trợ, phục vụ" };
+const LOAI_HCHTPV = "HCHTPV";
+const LOAI_LABEL = { GV: "Giảng viên, NCV, trợ giảng", HCHTPV: "Hành chính, hỗ trợ, phục vụ" };
 
 const COL = {
   THOIGIAN:     0,   // A
@@ -328,7 +328,7 @@ function findStaff_(msnv) {
       hoTen: str_(r[iH]),
       donVi: str_(r[iD]),
       role:  role === "hr" ? "hr" : role === "x" ? "manager" : "staff",
-      loaiPhieu: iL >= 0 ? normLoai_(r[iL]) : LOAI_HTPV,
+      loaiPhieu: iL >= 0 ? normLoai_(r[iL]) : LOAI_HCHTPV,
       email: isEmail_(e) ? e : ""
     };
   });
@@ -690,10 +690,10 @@ function getV2Sheet_(create) {
   return sh;
 }
 
-/** Chuẩn hóa loại phiếu: "GV" hoặc "HTPV" (trống / không nhận ra → HTPV, giữ tương thích dữ liệu cũ) */
+/** Chuẩn hóa loại phiếu: "GV" hoặc "HCHTPV" (trống / không nhận ra → HCHTPV, giữ tương thích dữ liệu cũ) */
 function normLoai_(v) {
   const s = str_(v).toLowerCase();
-  return (s === "gv" || s.indexOf("giảng viên") === 0 || s.indexOf("giang vien") === 0) ? LOAI_GV : LOAI_HTPV;
+  return (s === "gv" || s.indexOf("giảng viên") === 0 || s.indexOf("giang vien") === 0) ? LOAI_GV : LOAI_HCHTPV;
 }
 function userLoai_(user) { return normLoai_(user && user.loaiPhieu); }
 function rowLoaiV2_(r) { return normLoai_(r[V2COL.LOAIPHIEU]); }
@@ -1608,8 +1608,8 @@ function migrateAddThangDanhGiaColumn() {
 
 /**
  * CHẠY 1 LẦN sau khi cập nhật code (bản gộp phiếu Giảng viên + Hỗ trợ phục vụ):
- *  • DanhSachNhanSu: thêm cột "LoaiPhieu" (nếu chưa có), ô trống điền "HTPV".
- *  • DuLieuDanhGia_KPI: thêm tiêu đề cột "Loại phiếu" (cột cuối), ô trống của dòng có dữ liệu điền "HTPV".
+ *  • DanhSachNhanSu: thêm cột "LoaiPhieu" (nếu chưa có), ô trống điền "HCHTPV".
+ *  • DuLieuDanhGia_KPI: thêm tiêu đề cột "Loại phiếu" (cột cuối), ô trống của dòng có dữ liệu điền "HCHTPV".
  * Sau đó sửa tay cột LoaiPhieu = GV cho những dòng là giảng viên / nghiên cứu viên / trợ giảng.
  * An toàn khi chạy lại: chỉ điền ô đang trống, không ghi đè giá trị đã có.
  */
@@ -1632,7 +1632,7 @@ function setupLoaiPhieu() {
     const rg   = ns.getRange(2, iL + 1, last - 1, 1);
     const vals = rg.getValues();
     for (let i = 0; i < vals.length; i++)
-      if (str_(ids[i][0]) && !str_(vals[i][0])) { vals[i][0] = LOAI_HTPV; nsFilled++; }
+      if (str_(ids[i][0]) && (!str_(vals[i][0]) || str_(vals[i][0]).toUpperCase() === "HTPV")) { vals[i][0] = LOAI_HCHTPV; nsFilled++; }
     rg.setValues(vals);
   }
 
@@ -1646,12 +1646,12 @@ function setupLoaiPhieu() {
       const vals = rg.getValues();
       const msnv = sh.getRange(2, V2COL.MSNV + 1, lastK - 1, 1).getValues();
       for (let i = 0; i < vals.length; i++)
-        if (str_(msnv[i][0]) && !str_(vals[i][0])) { vals[i][0] = LOAI_HTPV; kpiFilled++; }
+        if (str_(msnv[i][0]) && (!str_(vals[i][0]) || str_(vals[i][0]).toUpperCase() === "HTPV")) { vals[i][0] = LOAI_HCHTPV; kpiFilled++; }
       rg.setValues(vals);
     }
   }
-  notify_("✅ setupLoaiPhieu xong.\n• " + SHEET_NHANSU + ": điền HTPV cho " + nsFilled + " dòng trống\n• " +
-          SHEET_DANHGIA_V2 + ": điền HTPV cho " + kpiFilled + " phiếu\n\nTiếp theo: sửa cột LoaiPhieu = GV cho giảng viên / nghiên cứu viên / trợ giảng.");
+  notify_("✅ setupLoaiPhieu xong.\n• " + SHEET_NHANSU + ": điền HCHTPV cho " + nsFilled + " dòng trống\n• " +
+          SHEET_DANHGIA_V2 + ": điền HCHTPV cho " + kpiFilled + " phiếu\n\nTiếp theo: sửa cột LoaiPhieu = GV cho giảng viên / nghiên cứu viên / trợ giảng.");
 }
 
 /**
@@ -1668,7 +1668,7 @@ function listMultiRole() {
     const id = normalizeId_(data[i][iM]);
     if (!id) continue;
     const r = iR >= 0 ? str_(data[i][iR]).toLowerCase() : "";
-    const slot = str_(data[i][iD]) + " [" + (iL >= 0 ? normLoai_(data[i][iL]) : LOAI_HTPV) +
+    const slot = str_(data[i][iD]) + " [" + (iL >= 0 ? normLoai_(data[i][iL]) : LOAI_HCHTPV) +
                  (r === "x" ? ", Trưởng ĐV" : r === "hr" ? ", HR" : "") + "]";
     (by[id] = by[id] || { name: str_(data[i][iH]), slots: [] }).slots.push(slot);
   }
