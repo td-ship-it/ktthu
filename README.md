@@ -165,13 +165,16 @@ Một ứng dụng dùng cho cả **giảng viên, nghiên cứu viên, trợ gi
 Mỗi vị trí đánh giá trong `DanhSachNhanSu` có thêm cột **`NguoiCham`** = MSNV của người chấm phiếu đó (hàm `setupLoaiPhieu` tự thêm cột). Áp dụng cho phiếu từ tháng 10/2026; phiếu cũ vẫn chấm theo đơn vị.
 
 1. Ô `NguoiCham` có MSNV hợp lệ → **chỉ người đó** thấy và chấm phiếu này. Người chấm phải có ít nhất một dòng `TRUONG DON VI` = `x` (hoặc `hr`) để vào được trang chấm sau khi xác thực OTP.
-2. Ô trống → **Trưởng đơn vị** (`x`) của đơn vị đó chấm, trừ chính chủ phiếu.
+   - Cột tùy chọn **`DonViCham`** gắn phiếu với một vị trí của người chấm: ghi tên đơn vị (đúng như cột `DonVi`, vd. `Trường Dược`) thì phiếu **chỉ hiện khi người chấm đang ở vị trí Trưởng đơn vị của đơn vị đó**. Để trống thì hiện ở mọi vị trí Trưởng đơn vị của người chấm. Ghi sai (người chấm không phải Trưởng đơn vị ở đó) thì bị bỏ qua.
+2. Ô `NguoiCham` trống → **Trưởng đơn vị** (`x`) của đơn vị đó chấm, trừ chính chủ phiếu, và **chỉ khi đang ở đúng vị trí của đơn vị đó**.
 3. Không còn ai đủ điều kiện (vd. chủ phiếu là Trưởng đơn vị duy nhất của đơn vị) → **HR** chấm, ở mục *Chấm phiếu được giao* trên menu HR.
 4. **Không ai chấm phiếu của chính mình.** Kiểm tra ở máy chủ khi xem và khi lưu.
 
 Bảng chấm hiển thị cột **Đơn vị** vì một người chấm có thể chấm phiếu của nhiều đơn vị; một người có hai phiếu (hai vị trí) hiện thành hai dòng và điểm ghi đúng từng phiếu. Mỗi lần lưu, MSNV người chấm được ghi vào cột cuối **"Người chấm (MSNV)"** của `DuLieuDanhGia_KPI`.
 
-Ví dụ: cô Tươi (Trưởng phòng QTTH) → `NguoiCham` = MSNV ông Tuấn; ông Hải (Trưởng bộ môn và Phó hiệu trưởng) → cả hai dòng `NguoiCham` = MSNV ông Tuấn; hai dòng Trưởng đơn vị của ông Tuấn → `NguoiCham` = MSNV người của Phòng TCCB (hoặc cấp trên) để Phó hiệu trưởng cùng đơn vị không chấm phiếu của Hiệu trưởng.
+Ví dụ để ông Tuấn ở vị trí *Hiệu trưởng Trường Dược* chỉ thấy các Trưởng đơn vị được giao, còn ở vị trí *Trưởng bộ môn X* chỉ thấy người của Bộ môn X: ghi `DonViCham` = `Trường Dược` cho các dòng `NguoiCham` = MSNV ông Tuấn dưới đây.
+
+Cô Tươi (Trưởng phòng QTTH) → `NguoiCham` = MSNV ông Tuấn; ông Hải (Trưởng bộ môn và Phó hiệu trưởng) → cả hai dòng `NguoiCham` = MSNV ông Tuấn; hai dòng Trưởng đơn vị của ông Tuấn → `NguoiCham` = MSNV người của Phòng TCCB (hoặc cấp trên) để Phó hiệu trưởng cùng đơn vị không chấm phiếu của Hiệu trưởng.
 
 **Cài đặt:** dán `Code.gs` mới, tạo phiên bản mới; chạy `setupLoaiPhieu` (thêm cột `NguoiCham` và tiêu đề cột mới ở sheet phiếu); điền cột `NguoiCham`; chạy **`checkNguoiCham`** để rà (ai chỉ định sai, ai là Trưởng đơn vị chưa có người chấm). Chạy lại bất cứ lúc nào.
 

@@ -634,7 +634,7 @@
 
     <footer>
       <p><b>PHIẾU TỰ ĐÁNH GIÁ HIỆU QUẢ CÔNG VIỆC TRỰC TUYẾN</b></p>
-      <p>© 2026 Phòng Tổ chức - Nhân sự · <span style="opacity:.6;">phiên bản 2026.10.31</span></p>
+      <p>© 2026 Phòng Tổ chức - Nhân sự · <span style="opacity:.6;">phiên bản 2026.10.31b</span></p>
     </footer>
   </div>
 </div>
@@ -692,7 +692,7 @@ const PAGE_LABELS = {
   'page-hr-detail':    { title:'Chi tiết đơn vị', sub:'Danh sách VC-NLĐ theo đơn vị' }
 };
 
-const APP_VERSION = '2026.10.31';
+const APP_VERSION = '2026.10.31b';
 window.addEventListener('error', ev => showErrBanner(ev.message));
 window.addEventListener('unhandledrejection', ev => showErrBanner(ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason)));
 function showErrBanner(msg) {
@@ -745,7 +745,7 @@ function showError(err) { if (!err || !err.handled) alert('⚠️ ' + (err && er
 // ------------------------------------------------------------
 // Kiểm tra dữ liệu máy chủ trả về + phiên bản Apps Script
 // ------------------------------------------------------------
-const API_REQUIRED = '2026.10.31';       // Code.gs phải có API_VERSION ≥ số này
+const API_REQUIRED = '2026.10.31b';       // Code.gs phải có API_VERSION ≥ số này
 const isUser = u => !!u && typeof u === 'object' && typeof u.hoTen === 'string' && typeof u.role === 'string';
 const SHAPE = {
   login:      d => !!d && (d.multiUnit ? Array.isArray(d.donViList) : d.otpRequired ? !!d.otpId : (!!d.token && isUser(d.user))),
@@ -1999,7 +1999,7 @@ function goToManagerView() {
   if (!month) return alert('Vui lòng chọn tháng và năm!');
   state.mgrMonth = month;
   document.getElementById('mgr-unit-display').textContent = isV2Month(month)
-    ? (state.user.role === 'hr' ? 'các phiếu chưa có người chấm hoặc được giao cho Thầy/Cô' : 'các phiếu thuộc quyền chấm của Thầy/Cô')
+    ? (state.user.role === 'hr' ? 'các phiếu chưa có người chấm hoặc được giao cho Thầy/Cô' : state.user.donVi + ' (gồm các phiếu được giao cho vị trí này)')
     : state.user.donVi;
   document.getElementById('mgr-month-display').textContent = monthLabel(month);
   showPage('page-mgr-table');

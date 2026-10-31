@@ -22,7 +22,7 @@
  * ============================================================
  */
 
-const API_VERSION   = "2026.10.31";   // giao diện so khớp số này để báo khi Apps Script chưa cập nhật
+const API_VERSION   = "2026.10.31b";   // giao diện so khớp số này để báo khi Apps Script chưa cập nhật
 const SHEET_NHANSU  = "DanhSachNhanSu";
 const SHEET_DANHGIA = "DuLieuDanhGia";
 const SHEET_LOGIN   = "LichSuDangNhap";
@@ -832,7 +832,9 @@ function saveDataV2_(form, user, month) {
 // AI CHẤM PHIẾU NÀO (từ tháng 10/2026)
 //   Cột "NguoiCham" trong DanhSachNhanSu (MSNV của người chấm) theo từng vị trí đánh giá:
 //   1. Có NguoiCham hợp lệ → chỉ người đó chấm (người chấm phải có dòng TRUONG DON VI = x hoặc hr).
-//   2. NguoiCham trống → Trưởng đơn vị (x) của đơn vị đó chấm, trừ chính chủ phiếu.
+//      Cột tùy chọn "DonViCham" gắn phiếu với một vị trí của người chấm: có giá trị (vd. "Trường Dược")
+//      thì chỉ hiện khi người chấm đang ở vị trí Trưởng đơn vị của đơn vị đó; để trống thì hiện ở mọi vị trí Trưởng đơn vị của họ.
+//   2. NguoiCham trống → Trưởng đơn vị (x) của đơn vị đó chấm (khi đang ở đúng vị trí của đơn vị đó), trừ chính chủ phiếu.
 //   3. Không có ai đủ điều kiện (vd. chủ phiếu là Trưởng đơn vị duy nhất) → HR chấm.
 //   Không ai chấm phiếu của chính mình.
 // ============================================================
@@ -842,6 +844,7 @@ function gradingMap_() {
   const iM = h.indexOf("MSNV"), iD = h.indexOf("DonVi"), iR = h.indexOf("TRUONG DON VI");
   const iL = h.findIndex(x => /^LOAI ?PHIEU$/.test(normHeader_(x)));
   const iG = h.findIndex(x => /^NGUOI ?CHAM$/.test(normHeader_(x)));
+  const iV = h.findIndex(x => /^DON ?VI ?CHAM$/.test(normHeader_(x)));
   const slots = {}, managers = {}, privileged = {};
   for (let i = 1; i < data.length; i++) {
     const id = normalizeId_(data[i][iM]);
@@ -849,7 +852,8 @@ function gradingMap_() {
     const donVi = str_(data[i][iD]);
     const role = iR >= 0 ? str_(data[i][iR]).toLowerCase() : "";
     const loai = iL >= 0 ? normLoai_(data[i][iL]) : LOAI_HCHTPV;
-    slots[id + "|" + donVi + "|" + loai] = { nguoiCham: iG >= 0 ? normalizeId_(data[i][iG]) : "", role: role };
+    slots[id + "|" + donVi + "|" + loai] = { nguoiCham: iG >= 0 ? normalizeId_(data[i][iG]) : "",
+                                              donViCham: iV >= 0 ? str_(data[i][iV]) : "", role: role };
     if (role === "x") { (managers[donVi] = managers[donVi] || {})[id] = true; }
     if (role === "x" || role === "hr") privileged[id] = true;
   }
@@ -863,15 +867,25 @@ function assignedGrader_(map, ownerId, donVi, loai) {
   return (nc && nc !== ownerId && map.privileged[nc]) ? nc : "";
 }
 
-/** Người dùng `grader` (token) có được chấm phiếu của (msnv, donVi, loaiPhieu) không */
+/**
+ * Người dùng `grader` (token, gồm vị trí đang chọn) có được chấm phiếu của (msnv, donVi, loaiPhieu) không.
+ * Phiếu được giao qua NguoiCham + DonViCham chỉ hiện khi người chấm đang ở vị trí Trưởng đơn vị của DonViCham;
+ * phiếu theo quy tắc mặc định chỉ hiện khi người chấm đang ở vị trí Trưởng đơn vị của chính đơn vị đó.
+ */
 function canGrade_(map, grader, msnv, donVi, loaiPhieu) {
   const owner = normalizeId_(msnv), me = normalizeId_(grader.msnv);
   if (!owner || owner === me) return false;
   const loai = normLoai_(loaiPhieu);
   const nc = assignedGrader_(map, owner, donVi, loai);
-  if (nc) return nc === me;
+  if (nc) {
+    if (nc !== me) return false;
+    const dv = (map.slots[owner + "|" + donVi + "|" + loai] || {}).donViCham;
+    // DonViCham chỉ có hiệu lực nếu người chấm thật sự là Trưởng đơn vị ở đó (sai thì bỏ qua để phiếu không bị ẩn)
+    if (dv && (map.managers[dv] || {})[me]) return str_(grader.donVi) === dv;
+    return true;
+  }
   const mgrs = Object.keys(map.managers[donVi] || {}).filter(id => id !== owner);
-  if (mgrs.length) return grader.role === "manager" && mgrs.indexOf(me) >= 0;
+  if (mgrs.length) return grader.role === "manager" && mgrs.indexOf(me) >= 0 && str_(grader.donVi) === donVi;
   return grader.role === "hr";
 }
 
@@ -1695,6 +1709,10 @@ function setupLoaiPhieu() {
     ensureSize_(ns, 0, ns.getLastColumn() + 1);
     ns.getRange(1, ns.getLastColumn() + 1).setValue("NguoiCham").setFontWeight("bold");
   }
+  if (ns.getRange(1, 1, 1, ns.getLastColumn()).getValues()[0].findIndex(x => /^DON ?VI ?CHAM$/.test(normHeader_(x))) < 0) {
+    ensureSize_(ns, 0, ns.getLastColumn() + 1);
+    ns.getRange(1, ns.getLastColumn() + 1).setValue("DonViCham").setFontWeight("bold");
+  }
   let nsFilled = 0;
   const last = ns.getLastRow();
   if (last >= 2) {
@@ -1737,6 +1755,7 @@ function checkNguoiCham() {
   const iM = h.indexOf("MSNV"), iH = h.indexOf("HoTen"), iD = h.indexOf("DonVi"), iR = h.indexOf("TRUONG DON VI");
   const iL = h.findIndex(x => /^LOAI ?PHIEU$/.test(normHeader_(x)));
   const iG = h.findIndex(x => /^NGUOI ?CHAM$/.test(normHeader_(x)));
+  const iV = h.findIndex(x => /^DON ?VI ?CHAM$/.test(normHeader_(x)));
   if (iG < 0) { notify_("❌ Sheet " + SHEET_NHANSU + " chưa có cột NguoiCham. Chạy setupLoaiPhieu() để thêm cột."); return; }
   const map = gradingMap_();
   const names = {};
@@ -1752,7 +1771,12 @@ function checkNguoiCham() {
       if (nc === id) bad.push(who + " — NguoiCham là chính mình");
       else if (!names[nc]) bad.push(who + " — NguoiCham " + str_(data[i][iG]) + " không có trong danh sách");
       else if (!map.privileged[nc]) bad.push(who + " — " + names[nc] + " không có dòng TRUONG DON VI = x/hr nên không chấm được");
-      else set.push(who + " → " + names[nc]);
+      else {
+        const dv = iV >= 0 ? str_(data[i][iV]) : "";
+        if (dv && !(map.managers[dv] || {})[nc])
+          bad.push(who + " — DonViCham \"" + dv + "\": " + names[nc] + " không phải Trưởng đơn vị ở đó (bỏ qua DonViCham, phiếu hiện ở mọi vị trí của người chấm)");
+        set.push(who + " → " + names[nc] + (dv ? " (khi ở vị trí " + dv + ")" : ""));
+      }
     } else if (role === "x") {
       const loai = iL >= 0 ? normLoai_(data[i][iL]) : LOAI_HCHTPV;
       const others = Object.keys(map.managers[str_(data[i][iD])] || {}).filter(x => x !== id);
