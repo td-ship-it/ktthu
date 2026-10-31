@@ -22,7 +22,7 @@
  * ============================================================
  */
 
-const API_VERSION   = "2026.10.30";   // giao diện so khớp số này để báo khi Apps Script chưa cập nhật
+const API_VERSION   = "2026.10.31";   // giao diện so khớp số này để báo khi Apps Script chưa cập nhật
 const SHEET_NHANSU  = "DanhSachNhanSu";
 const SHEET_DANHGIA = "DuLieuDanhGia";
 const SHEET_LOGIN   = "LichSuDangNhap";
@@ -90,7 +90,7 @@ const REPORT_HEADERS = [
   "Điểm TĐV", "TĐV xếp loại", "Ghi chú TĐV"
 ];
 
-// auth: null = không cần đăng nhập | "any" = mọi vai trò | "manager" | "hr"
+// auth: null = không cần đăng nhập | "any" = mọi vai trò | "manager" | "hr" | "grader" (Trưởng đơn vị hoặc HR)
 const ROUTES = {
   login:                    { auth: null,      fn: login_ },
   verifyOtp:                { auth: null,      fn: verifyOtp_ },
@@ -99,8 +99,8 @@ const ROUTES = {
   checkDoubleEntry:         { auth: "any",     fn: checkDoubleEntry_ },
   saveData:                 { auth: "any",     fn: saveData_ },
   getUserHistory:           { auth: "any",     fn: getUserHistory_ },
-  getStaffData:             { auth: "manager", fn: getStaffData_ },
-  updateManagerEvaluations: { auth: "manager", fn: updateManagerEvaluations_ },
+  getStaffData:             { auth: "grader",  fn: getStaffData_ },
+  updateManagerEvaluations: { auth: "grader",  fn: updateManagerEvaluations_ },
   getAllStaffData:          { auth: "hr",      fn: getAllStaffData_ },
   exportReport:             { auth: "hr",      fn: exportReport_ },
   exportCSVData:            { auth: "hr",      fn: exportCSVData_ },
@@ -131,8 +131,9 @@ function doPost(e) {
     let user = null;
     if (route.auth) {
       user = verifyToken_(req.token);
-      if (route.auth !== "any" && user.role !== route.auth)
-        throw appError_("Bạn không có quyền thực hiện thao tác này", "FORBIDDEN");
+      const allowed = route.auth === "any" ||
+        (route.auth === "grader" ? (user.role === "manager" || user.role === "hr") : user.role === route.auth);
+      if (!allowed) throw appError_("Bạn không có quyền thực hiện thao tác này", "FORBIDDEN");
     }
 
     const data = route.fn(req.args || {}, user, req);
@@ -637,7 +638,7 @@ const V2COL = (function () {
   const c = { THOIGIAN: 0, THANG: 1, MSNV: 2, HOTEN: 3, DONVI: 4, DIEM: 5 };
   let n = 5 + V2_KEYS.length;
   ["TONGKPI", "THUONG", "MOTATHUONG", "TONGDIEM", "XEPLOAI", "CANCUVUOT", "LYDO",
-   "SEPTHUONG", "SEPDIEM", "SEPLOAI", "SEPGHICHU", "LOAIPHIEU"].forEach(k => { c[k] = n++; });
+   "SEPTHUONG", "SEPDIEM", "SEPLOAI", "SEPGHICHU", "LOAIPHIEU", "NGUOICHAM"].forEach(k => { c[k] = n++; });
   c.TOTAL = n;
   return c;
 })();
@@ -645,7 +646,7 @@ const V2_TOTAL_COLS = V2COL.TOTAL;
 const V2_TAIL_HEADERS = [
   "Tổng KPI (I+II)", "Thưởng đề xuất", "Mô tả cách làm hay & minh chứng", "Tổng điểm (≤100)",
   "Tự xếp loại", "Căn cứ xác nhận vượt mức (A+)", "Ghi chú xếp loại",
-  "Thưởng TĐV công nhận", "Điểm TĐV", "TĐV xếp loại", "Ghi chú TĐV", "Loại phiếu"
+  "Thưởng TĐV công nhận", "Điểm TĐV", "TĐV xếp loại", "Ghi chú TĐV", "Loại phiếu", "Người chấm (MSNV)"
 ];
 const V2_HEADERS = ["Thời gian", "Tháng đánh giá", "MSNV", "Họ tên", "Đơn vị"]
   .concat(V2_KEYS.map(k => V2_RULES[k].label), V2_TAIL_HEADERS);
@@ -713,12 +714,14 @@ function hasEntryV2_(data, user, month) {
     if (sameSlotV2_(data[i], user, month)) return true;
   return false;
 }
-/** Bảo đảm tiêu đề cột "Loại phiếu" có mặt ở sheet đã tạo từ trước khi có cột này */
+/** Bảo đảm tiêu đề các cột "Loại phiếu", "Người chấm" có mặt ở sheet đã tạo từ trước khi có các cột này */
 function ensureLoaiHeaderV2_(sheet) {
   ensureSize_(sheet, 0, V2_TOTAL_COLS);
-  const cell = sheet.getRange(1, V2COL.LOAIPHIEU + 1);
-  if (str_(cell.getValue()) !== "Loại phiếu")
-    cell.setValue("Loại phiếu").setBackground("#0f2557").setFontColor("white").setFontWeight("bold").setWrap(true);
+  [[V2COL.LOAIPHIEU, "Loại phiếu"], [V2COL.NGUOICHAM, "Người chấm (MSNV)"]].forEach(p => {
+    const cell = sheet.getRange(1, p[0] + 1);
+    if (str_(cell.getValue()) !== p[1])
+      cell.setValue(p[1]).setBackground("#0f2557").setFontColor("white").setFontWeight("bold").setWrap(true);
+  });
 }
 
 function numOrBlank_(v) {
@@ -748,7 +751,8 @@ function mapRowV2_(r, i) {
     sepDiem:     numOrBlank_(r[V2COL.SEPDIEM]),
     sepLoai:     str_(r[V2COL.SEPLOAI]),
     sepGhiChu:   str_(r[V2COL.SEPGHICHU]),
-    loaiPhieu:   rowLoaiV2_(r)
+    loaiPhieu:   rowLoaiV2_(r),
+    nguoiCham:   str_(r[V2COL.NGUOICHAM])
   };
 }
 
@@ -756,7 +760,7 @@ function reportRowV2_(it, idx) {
   return [idx + 1, it.hoTen, it.donVi]
     .concat(V2_KEYS.map(k => it.diem[k]))
     .concat([it.tongKpi, it.thuong, it.moTaThuong, it.tongDiem, it.xepLoai,
-             it.canCuVuot, it.lyDo, it.sepThuong, it.sepDiem, it.sepLoai, it.sepGhiChu, LOAI_LABEL[it.loaiPhieu] || it.loaiPhieu]);
+             it.canCuVuot, it.lyDo, it.sepThuong, it.sepDiem, it.sepLoai, it.sepGhiChu, LOAI_LABEL[it.loaiPhieu] || it.loaiPhieu, it.nguoiCham]);
 }
 
 function saveDataV2_(form, user, month) {
@@ -824,6 +828,53 @@ function saveDataV2_(form, user, month) {
   });
 }
 
+// ============================================================
+// AI CHẤM PHIẾU NÀO (từ tháng 10/2026)
+//   Cột "NguoiCham" trong DanhSachNhanSu (MSNV của người chấm) theo từng vị trí đánh giá:
+//   1. Có NguoiCham hợp lệ → chỉ người đó chấm (người chấm phải có dòng TRUONG DON VI = x hoặc hr).
+//   2. NguoiCham trống → Trưởng đơn vị (x) của đơn vị đó chấm, trừ chính chủ phiếu.
+//   3. Không có ai đủ điều kiện (vd. chủ phiếu là Trưởng đơn vị duy nhất) → HR chấm.
+//   Không ai chấm phiếu của chính mình.
+// ============================================================
+function gradingMap_() {
+  const data = getSheet_(SHEET_NHANSU).getDataRange().getValues();
+  const h  = data[0].map(str_);
+  const iM = h.indexOf("MSNV"), iD = h.indexOf("DonVi"), iR = h.indexOf("TRUONG DON VI");
+  const iL = h.findIndex(x => /^LOAI ?PHIEU$/.test(normHeader_(x)));
+  const iG = h.findIndex(x => /^NGUOI ?CHAM$/.test(normHeader_(x)));
+  const slots = {}, managers = {}, privileged = {};
+  for (let i = 1; i < data.length; i++) {
+    const id = normalizeId_(data[i][iM]);
+    if (!id) continue;
+    const donVi = str_(data[i][iD]);
+    const role = iR >= 0 ? str_(data[i][iR]).toLowerCase() : "";
+    const loai = iL >= 0 ? normLoai_(data[i][iL]) : LOAI_HCHTPV;
+    slots[id + "|" + donVi + "|" + loai] = { nguoiCham: iG >= 0 ? normalizeId_(data[i][iG]) : "", role: role };
+    if (role === "x") { (managers[donVi] = managers[donVi] || {})[id] = true; }
+    if (role === "x" || role === "hr") privileged[id] = true;
+  }
+  return { slots: slots, managers: managers, privileged: privileged };
+}
+
+/** Chuẩn hóa người chấm hợp lệ của một phiếu: "" nếu chưa chỉ định / không hợp lệ / tự chấm mình */
+function assignedGrader_(map, ownerId, donVi, loai) {
+  const s = map.slots[ownerId + "|" + donVi + "|" + loai];
+  const nc = s ? s.nguoiCham : "";
+  return (nc && nc !== ownerId && map.privileged[nc]) ? nc : "";
+}
+
+/** Người dùng `grader` (token) có được chấm phiếu của (msnv, donVi, loaiPhieu) không */
+function canGrade_(map, grader, msnv, donVi, loaiPhieu) {
+  const owner = normalizeId_(msnv), me = normalizeId_(grader.msnv);
+  if (!owner || owner === me) return false;
+  const loai = normLoai_(loaiPhieu);
+  const nc = assignedGrader_(map, owner, donVi, loai);
+  if (nc) return nc === me;
+  const mgrs = Object.keys(map.managers[donVi] || {}).filter(id => id !== owner);
+  if (mgrs.length) return grader.role === "manager" && mgrs.indexOf(me) >= 0;
+  return grader.role === "hr";
+}
+
 function listV2_(month, donVi) {
   const sheet = getV2Sheet_(false);
   if (!sheet) return [];
@@ -874,17 +925,23 @@ function updateManagerV2_(items, user, month) {
   return withLock_(() => {
     const sheet = getV2Sheet_(false);
     if (!sheet) throw appError_("Chưa có phiếu nào của tháng này", "NO_DATA");
-    const rows = monthRowsV2_(sheet, month).filter(x => str_(x.r[V2COL.DONVI]) === user.donVi);
+    ensureLoaiHeaderV2_(sheet);
+    const map = gradingMap_();
+    // Chỉ các phiếu người này được phép chấm (theo NguoiCham / Trưởng đơn vị / HR; không tự chấm mình)
+    const rows = monthRowsV2_(sheet, month)
+      .filter(x => canGrade_(map, user, x.r[V2COL.MSNV], str_(x.r[V2COL.DONVI]), rowLoaiV2_(x.r)));
     const byRow = {};
     rows.forEach(x => { byRow[x.row] = x; });
     const owns = (x, it) => {
       if (it.loaiPhieu && rowLoaiV2_(x.r) !== normLoai_(it.loaiPhieu)) return false;
+      if (it.donVi && str_(x.r[V2COL.DONVI]) !== it.donVi) return false;   // một người có thể có phiếu ở nhiều đơn vị
       return it.msnv ? matchesId_(x.r[V2COL.MSNV], it.msnv) : str_(x.r[V2COL.HOTEN]) === it.hoTen;
     };
 
     // Kiểm tra hết trước, rồi mới ghi (tránh ghi dở dang khi một dòng lỗi)
     const missing = [];
     const writes = [];
+    const graders = [];
     clean.forEach(it => {
       let hit = byRow[it.rowId] && owns(byRow[it.rowId], it) ? byRow[it.rowId] : null;
       if (!hit) hit = rows.find(x => owns(x, it)) || null;
@@ -894,8 +951,10 @@ function updateManagerV2_(items, user, month) {
       if (t > proposed)
         throw appError_("Thưởng công nhận của " + it.hoTen + " không được vượt mức đề xuất (" + proposed + "đ)", "BAD_INPUT");
       writes.push({ row: hit.row, values: [t, it.sepDiem, it.sepLoai, safeCell_(it.sepGhiChu)] });
+      graders.push({ row: hit.row, values: [str_(user.msnv)] });
     });
     writeBlock_(sheet, writes, V2COL.SEPTHUONG + 1, 4);
+    writeBlock_(sheet, graders, V2COL.NGUOICHAM + 1, 1);   // lưu vết ai đã chấm
     const saved = writes.length;
     SpreadsheetApp.flush();
     return { saved: saved, missing: missing };
@@ -995,12 +1054,17 @@ function saveData_(args, user) {
 // ============================================================
 function getStaffData_(args, user) {
   const month = requireMonth_(args.month);
-  if (isV2Month_(month))
-    return listV2_(month, user.donVi).sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi"));
+  if (isV2Month_(month)) {
+    const map = gradingMap_();
+    return listV2_(month)
+      .filter(it => canGrade_(map, user, it.msnv, it.donVi, it.loaiPhieu))
+      .sort((a, b) => a.donVi.localeCompare(b.donVi, "vi") || a.hoTen.localeCompare(b.hoTen, "vi"));
+  }
+  if (user.role !== "manager") return [];   // phiếu cũ: chỉ Trưởng đơn vị chấm theo đơn vị như trước
   const sheet = getSheet_(SHEET_DANHGIA, true);
   if (!sheet) return [];
   return monthRowsV1_(sheet, month)
-    .filter(x => str_(x.r[COL.DONVI]) === user.donVi)
+    .filter(x => str_(x.r[COL.DONVI]) === user.donVi && !rowOwnedBy_(x.r, user))
     .map(x => mapRow_(x.r, x.row - 1))
     .sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi"));
 }
@@ -1016,6 +1080,7 @@ function updateManagerEvaluations_(args, user) {
   if (!items.length) throw appError_("Không có đánh giá nào để lưu", "BAD_INPUT");
   if (items.length > 1000) throw appError_("Quá nhiều dòng trong một lần lưu", "BAD_INPUT");
   if (isV2Month_(month)) return updateManagerV2_(items, user, month);
+  if (user.role !== "manager") throw appError_("Bạn không có quyền thực hiện thao tác này", "FORBIDDEN");
   const clean = items.map(parseMgrItem_);
 
   const lock = LockService.getScriptLock();
@@ -1025,7 +1090,7 @@ function updateManagerEvaluations_(args, user) {
     const data  = sheet.getDataRange().getValues();
 
     const belongs = (r, it) => {
-      if (!r || str_(r[COL.DONVI]) !== user.donVi || rowMonth_(r) !== month) return false;
+      if (!r || str_(r[COL.DONVI]) !== user.donVi || rowMonth_(r) !== month || rowOwnedBy_(r, user)) return false;
       return it.msnv ? matchesId_(r[COL.MSNV], it.msnv) : str_(r[COL.HOTEN]) === it.hoTen;
     };
 
@@ -1067,6 +1132,7 @@ function parseMgrItem_(it) {
     rowId: parseInt(it.rowId, 10) || 0,
     msnv: str_(it.msnv),
     loaiPhieu: str_(it.loaiPhieu),
+    donVi: str_(it.donVi),
     hoTen: hoTen,
     sepDiem: sepDiem,
     sepLoai: sepLoai,
@@ -1625,6 +1691,10 @@ function setupLoaiPhieu() {
     ensureSize_(ns, 0, iL + 1);
     ns.getRange(1, iL + 1).setValue("LoaiPhieu").setFontWeight("bold");
   }
+  if (head.findIndex(x => /^NGUOI ?CHAM$/.test(normHeader_(x))) < 0) {
+    ensureSize_(ns, 0, ns.getLastColumn() + 1);
+    ns.getRange(1, ns.getLastColumn() + 1).setValue("NguoiCham").setFontWeight("bold");
+  }
   let nsFilled = 0;
   const last = ns.getLastRow();
   if (last >= 2) {
@@ -1652,6 +1722,48 @@ function setupLoaiPhieu() {
   }
   notify_("✅ setupLoaiPhieu xong.\n• " + SHEET_NHANSU + ": điền HCHTPV cho " + nsFilled + " dòng trống\n• " +
           SHEET_DANHGIA_V2 + ": điền HCHTPV cho " + kpiFilled + " phiếu\n\nTiếp theo: sửa cột LoaiPhieu = GV cho giảng viên / nghiên cứu viên / trợ giảng.");
+}
+
+/**
+ * Rà soát cột NguoiCham (MSNV người chấm phiếu) trong DanhSachNhanSu:
+ *  • NguoiCham trỏ tới người không có dòng TRUONG DON VI = x / hr (không chấm được) hoặc không tồn tại
+ *  • tự chấm mình
+ *  • vị trí Trưởng đơn vị (x) chưa có NguoiCham: nếu đơn vị còn Trưởng/Phó khác thì người đó sẽ chấm,
+ *    nếu không thì HR chấm — nên điền NguoiCham là cấp trên trực tiếp
+ */
+function checkNguoiCham() {
+  const data = getSheet_(SHEET_NHANSU).getDataRange().getValues();
+  const h  = data[0].map(str_);
+  const iM = h.indexOf("MSNV"), iH = h.indexOf("HoTen"), iD = h.indexOf("DonVi"), iR = h.indexOf("TRUONG DON VI");
+  const iL = h.findIndex(x => /^LOAI ?PHIEU$/.test(normHeader_(x)));
+  const iG = h.findIndex(x => /^NGUOI ?CHAM$/.test(normHeader_(x)));
+  if (iG < 0) { notify_("❌ Sheet " + SHEET_NHANSU + " chưa có cột NguoiCham. Chạy setupLoaiPhieu() để thêm cột."); return; }
+  const map = gradingMap_();
+  const names = {};
+  for (let i = 1; i < data.length; i++) { const id = normalizeId_(data[i][iM]); if (id && !names[id]) names[id] = str_(data[i][iH]); }
+  const bad = [], noChief = [], set = [];
+  for (let i = 1; i < data.length; i++) {
+    const id = normalizeId_(data[i][iM]);
+    if (!id) continue;
+    const nc = normalizeId_(data[i][iG]);
+    const who = "Dòng " + (i + 1) + ": " + str_(data[i][iH]) + " — " + str_(data[i][iD]);
+    const role = iR >= 0 ? str_(data[i][iR]).toLowerCase() : "";
+    if (nc) {
+      if (nc === id) bad.push(who + " — NguoiCham là chính mình");
+      else if (!names[nc]) bad.push(who + " — NguoiCham " + str_(data[i][iG]) + " không có trong danh sách");
+      else if (!map.privileged[nc]) bad.push(who + " — " + names[nc] + " không có dòng TRUONG DON VI = x/hr nên không chấm được");
+      else set.push(who + " → " + names[nc]);
+    } else if (role === "x") {
+      const loai = iL >= 0 ? normLoai_(data[i][iL]) : LOAI_HCHTPV;
+      const others = Object.keys(map.managers[str_(data[i][iD])] || {}).filter(x => x !== id);
+      noChief.push(who + " (Trưởng đơn vị chưa có NguoiCham → " + (others.length ? "người ngang cấp cùng đơn vị sẽ chấm: " + others.map(x => names[x]).join(", ") : "HR chấm") + ")");
+    }
+  }
+  const out = [];
+  out.push("✅ Đã chỉ định người chấm: " + set.length + " phiếu");
+  out.push(bad.length ? "⚠️ " + bad.length + " dòng NguoiCham không hợp lệ (bị bỏ qua, phiếu quay về quy tắc mặc định):\n" + bad.slice(0, 30).join("\n") : "✅ Không có NguoiCham sai.");
+  out.push(noChief.length ? "ℹ️ " + noChief.length + " vị trí Trưởng đơn vị chưa có NguoiCham:\n" + noChief.slice(0, 30).join("\n") : "✅ Mọi vị trí Trưởng đơn vị đã có NguoiCham.");
+  notify_(out.join("\n\n"));
 }
 
 /**

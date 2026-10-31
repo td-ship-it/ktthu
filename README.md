@@ -160,6 +160,21 @@ Một ứng dụng dùng cho cả **giảng viên, nghiên cứu viên, trợ gi
 
 > Muốn chuyển dữ liệu từ một bản dggv cũ sang bản gộp: dán các dòng `DanhSachNhanSu` và `DuLieuDanhGia_KPI` của dggv vào Sheet của bản gộp (hai sheet cùng cấu trúc cột) rồi đặt cột `LoaiPhieu` = `GV` cho các dòng vừa dán. Sau đó có thể ngừng Worker dggv.
 
+## Ai chấm phiếu của ai (cột `NguoiCham`)
+
+Mỗi vị trí đánh giá trong `DanhSachNhanSu` có thêm cột **`NguoiCham`** = MSNV của người chấm phiếu đó (hàm `setupLoaiPhieu` tự thêm cột). Áp dụng cho phiếu từ tháng 10/2026; phiếu cũ vẫn chấm theo đơn vị.
+
+1. Ô `NguoiCham` có MSNV hợp lệ → **chỉ người đó** thấy và chấm phiếu này. Người chấm phải có ít nhất một dòng `TRUONG DON VI` = `x` (hoặc `hr`) để vào được trang chấm sau khi xác thực OTP.
+2. Ô trống → **Trưởng đơn vị** (`x`) của đơn vị đó chấm, trừ chính chủ phiếu.
+3. Không còn ai đủ điều kiện (vd. chủ phiếu là Trưởng đơn vị duy nhất của đơn vị) → **HR** chấm, ở mục *Chấm phiếu được giao* trên menu HR.
+4. **Không ai chấm phiếu của chính mình.** Kiểm tra ở máy chủ khi xem và khi lưu.
+
+Bảng chấm hiển thị cột **Đơn vị** vì một người chấm có thể chấm phiếu của nhiều đơn vị; một người có hai phiếu (hai vị trí) hiện thành hai dòng và điểm ghi đúng từng phiếu. Mỗi lần lưu, MSNV người chấm được ghi vào cột cuối **"Người chấm (MSNV)"** của `DuLieuDanhGia_KPI`.
+
+Ví dụ: cô Tươi (Trưởng phòng QTTH) → `NguoiCham` = MSNV ông Tuấn; ông Hải (Trưởng bộ môn và Phó hiệu trưởng) → cả hai dòng `NguoiCham` = MSNV ông Tuấn; hai dòng Trưởng đơn vị của ông Tuấn → `NguoiCham` = MSNV người của Phòng TCCB (hoặc cấp trên) để Phó hiệu trưởng cùng đơn vị không chấm phiếu của Hiệu trưởng.
+
+**Cài đặt:** dán `Code.gs` mới, tạo phiên bản mới; chạy `setupLoaiPhieu` (thêm cột `NguoiCham` và tiêu đề cột mới ở sheet phiếu); điền cột `NguoiCham`; chạy **`checkNguoiCham`** để rà (ai chỉ định sai, ai là Trưởng đơn vị chưa có người chấm). Chạy lại bất cứ lúc nào.
+
 ## Người làm việc ở nhiều đơn vị
 
 - Mỗi **vị trí đánh giá** (đơn vị + loại phiếu) đánh giá riêng: kiểm tra "đã gửi" theo *mã số + đơn vị + loại phiếu + tháng* (gửi ở vị trí A vẫn gửi được ở vị trí B; gửi lại ở A thì bị chặn). Lịch sử cá nhân hiện tất cả các vị trí.

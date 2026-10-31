@@ -634,7 +634,7 @@
 
     <footer>
       <p><b>PHIẾU TỰ ĐÁNH GIÁ HIỆU QUẢ CÔNG VIỆC TRỰC TUYẾN</b></p>
-      <p>© 2026 Phòng Tổ chức - Nhân sự · <span style="opacity:.6;">phiên bản 2026.10.30</span></p>
+      <p>© 2026 Phòng Tổ chức - Nhân sự · <span style="opacity:.6;">phiên bản 2026.10.31</span></p>
     </footer>
   </div>
 </div>
@@ -674,6 +674,7 @@ const NAV = {
     { section:'Tổ chức cán bộ' },
     { id:'page-hr-dashboard', icon:'📊', label:'Dashboard' },
     { id:'page-hr-detail',    icon:'📋', label:'Chi tiết đơn vị' },
+    { id:'page-mgr-eval',     icon:'👥', label:'Chấm phiếu được giao' },
     { section:'Cá nhân' },
     { id:'page-home',         icon:'📝', label:'Tự đánh giá' },
     { id:'page-success',      icon:'🕐', label:'Kết quả & lịch sử' }
@@ -691,7 +692,7 @@ const PAGE_LABELS = {
   'page-hr-detail':    { title:'Chi tiết đơn vị', sub:'Danh sách VC-NLĐ theo đơn vị' }
 };
 
-const APP_VERSION = '2026.10.30';
+const APP_VERSION = '2026.10.31';
 window.addEventListener('error', ev => showErrBanner(ev.message));
 window.addEventListener('unhandledrejection', ev => showErrBanner(ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason)));
 function showErrBanner(msg) {
@@ -744,7 +745,7 @@ function showError(err) { if (!err || !err.handled) alert('⚠️ ' + (err && er
 // ------------------------------------------------------------
 // Kiểm tra dữ liệu máy chủ trả về + phiên bản Apps Script
 // ------------------------------------------------------------
-const API_REQUIRED = '2026.10.30';       // Code.gs phải có API_VERSION ≥ số này
+const API_REQUIRED = '2026.10.31';       // Code.gs phải có API_VERSION ≥ số này
 const isUser = u => !!u && typeof u === 'object' && typeof u.hoTen === 'string' && typeof u.role === 'string';
 const SHAPE = {
   login:      d => !!d && (d.multiUnit ? Array.isArray(d.donViList) : d.otpRequired ? !!d.otpId : (!!d.token && isUser(d.user))),
@@ -1997,7 +1998,9 @@ function goToManagerView() {
   const month = getMonth('mp-mgr');
   if (!month) return alert('Vui lòng chọn tháng và năm!');
   state.mgrMonth = month;
-  document.getElementById('mgr-unit-display').textContent = state.user.donVi;
+  document.getElementById('mgr-unit-display').textContent = isV2Month(month)
+    ? (state.user.role === 'hr' ? 'các phiếu chưa có người chấm hoặc được giao cho Thầy/Cô' : 'các phiếu thuộc quyền chấm của Thầy/Cô')
+    : state.user.donVi;
   document.getElementById('mgr-month-display').textContent = monthLabel(month);
   showPage('page-mgr-table');
   loadManagerTable();
@@ -2012,6 +2015,7 @@ const MGR_HEAD_V1 = `<tr>
   <th class="th-status">Trạng thái</th></tr>`;
 const MGR_HEAD_V2 = `<tr>
   <th style="min-width:180px;">Họ và Tên</th>
+  <th style="min-width:150px;">Đơn vị</th>
   ${V2_KEYS.map(k => `<th>${V2_LABEL[k]}</th>`).join('')}
   <th>Tổng KPI</th><th>Thưởng đề xuất</th><th>Mô tả cách làm hay</th><th>Tổng</th><th>Tự xếp loại</th>
   <th>Căn cứ vượt mức (A+)</th><th>Ghi chú xếp loại</th>
@@ -2023,7 +2027,7 @@ async function loadManagerTable() {
   const v2 = isV2Month(state.mgrMonth);
   document.getElementById('mgr-thead').innerHTML = v2 ? MGR_HEAD_V2 : MGR_HEAD_V1;
   document.getElementById('mgr-v2-hint').classList.toggle('hidden', !v2);
-  const span = v2 ? 34 : 22;
+  const span = v2 ? 35 : 22;
   const n = nextSeq('mgrTable');
   tbody.innerHTML = `<tr><td colspan="${span}" style="text-align:center;padding:24px;color:var(--gray-400);">⏳ Đang tải...</td></tr>`;
   try {
@@ -2031,7 +2035,7 @@ async function loadManagerTable() {
     if (!isLatest('mgrTable', n)) return;
     updateNavBadge('page-mgr-eval', data.filter(r => !r.sepLoai).length);
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="${span}" style="text-align:center;padding:24px;color:var(--gray-400);">Chưa có VC-NLĐ nào nộp phiếu tháng này.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${span}" style="text-align:center;padding:24px;color:var(--gray-400);">${v2 ? 'Chưa có phiếu nào thuộc quyền chấm của Thầy/Cô trong tháng này.' : 'Chưa có VC-NLĐ nào nộp phiếu tháng này.'}</td></tr>`;
       return;
     }
     tbody.innerHTML = data.map(item => v2 ? mgrRowV2(item) : mgrRowV1(item)).join('');
@@ -2065,9 +2069,10 @@ function mgrRowV2(item) {
   const bonusCell = proposed > 0
     ? `<input type="text" inputmode="decimal" class="mgr-input mgr-bonus" placeholder="${fmt(proposed)}" value="${item.sepThuong === '' ? '' : fmt(item.sepThuong)}" oninput="mgrBonusChanged(this)" title="0 – ${fmt(proposed)} điểm">`
     : '<span class="muted-sm">0</span>';
-  return `<tr class="${item.sepLoai ? 'row-done' : ''}" data-v2="1" data-row="${esc(item.rowId)}" data-msnv="${esc(item.msnv)}" data-name="${esc(item.hoTen)}" data-loai="${esc(item.loaiPhieu || '')}"
+  return `<tr class="${item.sepLoai ? 'row-done' : ''}" data-v2="1" data-row="${esc(item.rowId)}" data-msnv="${esc(item.msnv)}" data-name="${esc(item.hoTen)}" data-loai="${esc(item.loaiPhieu || '')}" data-donvi="${esc(item.donVi || '')}"
       data-kpi="${esc(item.tongKpi)}" data-proposed="${proposed}" data-ii1="${esc(d.ii1)}" data-ii2="${esc(d.ii2)}" data-ii3="${esc(d.ii3)}">
     <td>${esc(item.hoTen)}${loaiTag(item)}</td>
+    <td style="font-size:12px;">${esc(item.donVi || '')}</td>
     ${V2_KEYS.map(k => `<td>${cell(d[k])}</td>`).join('')}
     <td${bold}>${cell(item.tongKpi)}</td><td${bold}>${cell(item.thuong)}</td><td class="note">${cell(item.moTaThuong)}</td>
     <td${bold}>${cell(item.tongDiem)}</td><td>${gradeBadge(item.xepLoai)}</td>
@@ -2132,7 +2137,7 @@ async function saveAllEvaluations() {
     }
     if (p.empty && !grade && !note && pb.empty) return;
     const it = {
-      rowId: Number(tr.dataset.row), msnv: tr.dataset.msnv, hoTen: tr.dataset.name, loaiPhieu: tr.dataset.loai || '',
+      rowId: Number(tr.dataset.row), msnv: tr.dataset.msnv, hoTen: tr.dataset.name, loaiPhieu: tr.dataset.loai || '', donVi: tr.dataset.donvi || '',
       sepDiem: p.empty ? '' : p.value, sepLoai: grade, sepGhiChu: note
     };
     if (tr.dataset.v2) it.sepThuong = pb.empty ? '' : pb.value;
@@ -2183,7 +2188,7 @@ async function loadDashboard(month) {
     if (!data.length) { content.innerHTML = `<div class="empty-state">Không có dữ liệu tháng ${monthLabel(month)}</div>`; return; }
     const pending = data.filter(r => !r.sepLoai).length;
     content.innerHTML = `
-      <div style="font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:12px;">📊 Tháng ${monthLabel(month)} — ${esc(state.user.donVi)} — Tổng: <b>${data.length}</b> VC-NLĐ đã nộp
+      <div style="font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:12px;">📊 Tháng ${monthLabel(month)} — ${isV2Month(month) ? 'các phiếu thuộc quyền chấm của Thầy/Cô' : esc(state.user.donVi)} — Tổng: <b>${data.length}</b> phiếu đã nộp
         ${pending ? ` · <span style="color:var(--accent-dark);">⏳ ${pending} chờ TĐV</span>` : ''}</div>
       <div class="sub-title">Tự xếp loại</div>
       ${gradeCountBlock(countGrades(data, 'xepLoai'), data.length)}
@@ -2191,8 +2196,8 @@ async function loadDashboard(month) {
       <div class="sub-title">Trưởng ĐV xếp loại</div>
       ${gradeCountBlock(countGrades(data, 'sepLoai'), data.length)}
       <div class="table-wrap" style="margin-top:20px;"><table class="history-table">
-        <thead><tr><th>Họ và tên</th><th>Tổng điểm</th><th>Tự xếp loại</th><th>Trưởng ĐV xếp loại</th></tr></thead>
-        <tbody>${data.map(r => `<tr><td>${esc(r.hoTen)}</td><td>${cell(r.tongDiem)}</td><td>${gradeBadge(r.xepLoai)}</td>
+        <thead><tr><th>Họ và tên</th><th>Đơn vị</th><th>Tổng điểm</th><th>Tự xếp loại</th><th>Trưởng ĐV xếp loại</th></tr></thead>
+        <tbody>${data.map(r => `<tr><td>${esc(r.hoTen)}${loaiTag(r)}</td><td>${esc(r.donVi || '')}</td><td>${cell(r.tongDiem)}</td><td>${gradeBadge(r.xepLoai)}</td>
           <td>${r.sepLoai ? gradeBadge(r.sepLoai) : pendingBadge('Chờ')}</td></tr>`).join('')}</tbody>
       </table></div>`;
   } catch (e) {
