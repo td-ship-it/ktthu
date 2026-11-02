@@ -132,6 +132,23 @@ Trang **Dashboard** của HR có nút **🏛️ Bảng tổng hợp chi thu nh�
 - **Khối chữ ký:** mỗi người ký (Người lập bảng · Phòng TCCB · Hiệu trưởng) có ô chọn — bỏ chọn thì khối đó (chức danh + họ tên) không in ra file; bỏ cả ba thì file không có phần chữ ký.
 - File được tạo ngay trên trình duyệt (thư viện ExcelJS tải từ CDN khi bấm nút); tên người ký và các ô chọn được nhớ cho lần sau.
 
+## Trang Phân tích (HR) — bản 2026.11.02
+
+Menu HR có thêm mục **📈 Phân tích**: chọn tháng (phiếu từ 10/2026) để xem số liệu tổng hợp, không cần xuất file.
+
+- **Tỷ lệ nộp phiếu** theo đơn vị, kèm danh sách người chưa nộp (đối chiếu `DanhSachNhanSu` với phiếu đã nộp; mỗi vị trí = MSNV + đơn vị + loại phiếu).
+- **Xếp loại và phân bố điểm**, theo loại phiếu (GV / HCHTPV) và theo đơn vị (bấm tiêu đề cột để sắp xếp).
+- **Mức đạt từng tiêu chí** (17 tiêu chí con và II.1 đến II.3), đánh dấu tiêu chí ít phân hóa; mức hoàn thành kế hoạch Phần II; điểm thưởng đề xuất so với TĐV công nhận.
+- **Tự chấm so với Trưởng đơn vị**: phân bố chênh lệch, ma trận đổi xếp loại, thống kê theo người chấm, danh sách phiếu lệch từ 4 điểm.
+- **Xu hướng theo tháng**: bấm "Xem xu hướng các tháng" để tải các tháng từ 10/2026 đến nay (cần từ hai tháng).
+- Bộ lọc: loại phiếu, đơn vị, trạng thái TĐV đã chấm hay chưa.
+
+**Cách hoạt động:** trang gọi action `getAnalytics` (chỉ vai trò HR) trả về từng phiếu của tháng (họ tên, đơn vị, loại phiếu, 20 điểm, xếp loại, điểm TĐV, họ tên người chấm) cùng số vị trí theo danh sách nhân sự. Mọi phép tính thống kê làm trên trình duyệt; không ghi gì vào Sheets. Người chấm hiện bằng họ tên (tra theo MSNV trong cột `Người chấm (MSNV)`); để trống nghĩa là Trưởng đơn vị mặc định.
+
+**Cài đặt:** dán `apps-script/Code.gs` mới → **Deploy → Manage deployments → ✏️ → New version → Deploy**; push `public/index.html` lên GitHub để Cloudflare triển khai lại. Chân trang phải hiện *phiên bản 2026.11.02*; nếu Apps Script chưa cập nhật, trang hiện dải vàng cảnh báo. Không cần sửa `src/` hay `wrangler.toml`. Với nhiều Worker: chép lại `public/index.html` và `Code.gs` cho từng bản như mọi lần cập nhật.
+
+> Trang chỉ đọc phiếu mẫu mới (từ tháng 10/2026). Chọn tháng trước đó sẽ có thông báo.
+
 ## Hai loại phiếu trong một ứng dụng (bản gộp 2026.10.30)
 
 Một ứng dụng dùng cho cả **giảng viên, nghiên cứu viên, trợ giảng** (phiếu `GV`) và **khối hành chính, hỗ trợ, phục vụ** (phiếu `HCHTPV`). Hai mẫu phiếu cùng cấu trúc điểm (`V2_KEYS`), chỉ khác chữ tiêu chí; nội dung từng mẫu ghi nguyên văn như hai ứng dụng trước (`V2_FORM_HCHTPV`, `V2_FORM_GV` trong `public/index.html`).
