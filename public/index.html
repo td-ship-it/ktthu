@@ -315,6 +315,116 @@
       .radio-option { font-size: 13px; padding: 9px 12px; }
       .section-header { font-size: 0.82rem; padding: 11px 13px; }
     }
+
+    /* ===== Trang Phân tích (HR) — mọi class có tiền tố an- để không đụng CSS các trang khác ===== */
+    #page-hr-analytics, #an-tip {
+      --an-s1: #2a78d6; --an-s2: #eb6834; --an-ink2: var(--gray-600); --an-grid: #e1e0d9; --an-axis: #c3c2b7;
+      --an-hover: rgba(15,37,87,.05); --an-track: #cde2fb;
+      --an-ca: #86b6ef; --an-on-ca: #0b0b0b; --an-cap: #1c5cab; --an-on-cap: #fff; --an-cb: #898781; --an-on-cb: #fff; --an-cc: #d03b3b; --an-on-cc: #fff;
+      --an-lo3: #e34948; --an-lo2: #ee8886; --an-lo1: #f6c0bf; --an-mid: #c3c2b7; --an-hi1: #9ec5f4; --an-hi2: #5598e7; --an-hi3: #1c5cab;
+      --an-on-lo3: #fff; --an-on-lo1: #0b0b0b; --an-on-mid: #0b0b0b; --an-on-hi2: #0b0b0b; --an-on-hi3: #fff;
+      --an-good: #0ca30c; --an-warn: #fab219; --an-serious: #ec835a; --an-info: #2a78d6;
+    }
+    #page-hr-analytics .an-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    #page-hr-analytics .an-bar .form-group { flex: 1 1 280px; }
+    .an-filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-top: 4px; }
+    .an-filters[hidden] { display: none; }
+    .an-fld { display: grid; gap: 4px; min-width: 0; }
+    .an-fld > span, .an-fld > label { font-size: 12px; color: var(--an-ink2); font-weight: 600; margin: 0; }
+    .an-fld select { height: 38px; max-width: 100%; padding: 0 28px 0 10px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--white); font: inherit; font-size: 13px; color: var(--gray-800); }
+    .an-seg { display: inline-flex; max-width: 100%; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; background: var(--white); }
+    .an-seg button { height: 35px; padding: 0 12px; border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--gray-800); cursor: pointer; white-space: nowrap; }
+    .an-seg button + button { border-left: 1.5px solid var(--gray-200); }
+    .an-seg button[aria-pressed="true"] { background: var(--navy); color: #fff; font-weight: 700; }
+    .an-filters select:focus-visible, .an-seg button:focus-visible, .an-sortbtn:focus-visible, .an-linkbtn:focus-visible { outline: 2px solid var(--an-s1); outline-offset: 2px; }
+    #an-content { display: grid; gap: 16px; }
+    .an-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 560px) { .an-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .an-tile { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+    .an-tile .k { font-size: 12px; color: var(--an-ink2); line-height: 1.35; font-weight: 600; }
+    .an-tile .v { font-size: 28px; line-height: 1.15; font-weight: 800; color: var(--navy); }
+    .an-tile .s { font-size: 12px; color: var(--an-ink2); }
+    .an-meter { height: 6px; border-radius: 3px; background: var(--an-track); overflow: hidden; margin-top: 2px; }
+    .an-meter > i { display: block; height: 100%; background: var(--an-s1); border-radius: 0 3px 3px 0; }
+    .an-panel { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 18px 16px; min-width: 0; display: grid; gap: 12px; align-content: start; }
+    .an-panel h2 { font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--navy); }
+    .an-panel h3 { font-size: 13px; font-weight: 700; color: var(--gray-800); }
+    .an-sub { color: var(--an-ink2); font-size: 13px; margin-top: -6px; }
+    .an-panel p { font-size: 13.5px; line-height: 1.55; }
+    .an-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .an-grid32 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+    @media (max-width: 900px) { .an-grid2, .an-grid32 { grid-template-columns: minmax(0, 1fr); } }
+    .an-stack { display: grid; gap: 16px; align-content: start; min-width: 0; }
+    .an-ins { margin: 0; padding: 0; display: grid; }
+    .an-ins li { list-style: none; display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--an-grid); align-items: start; font-size: 13.5px; }
+    .an-ins li:first-child { border-top: 0; padding-top: 2px; }
+    @media (max-width: 520px) { .an-ins li { grid-template-columns: minmax(0, 1fr); } }
+    .an-pill { display: inline-flex; align-items: center; gap: 6px; padding: 1px 9px; border: 1px solid var(--gray-200); border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; justify-self: start; }
+    .an-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--gray-400)); }
+    .an-hist { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; height: 190px; border-bottom: 1px solid var(--an-axis); }
+    .an-hcol { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
+    .an-hval { font-size: 12px; margin-bottom: 4px; height: 18px; font-variant-numeric: tabular-nums; }
+    .an-hbar { width: min(100%, 52px); border-radius: 4px 4px 0 0; }
+    .an-hlab { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+    .an-hlab span { font-size: 11px; line-height: 1.3; color: var(--an-ink2); text-align: center; overflow-wrap: anywhere; }
+    .an-bracket { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+    .an-bracket span { grid-column: var(--from) / span var(--span); border-top: 2px solid var(--an-cap); padding-top: 3px; font-size: 12px; color: var(--an-ink2); text-align: center; }
+    .an-axcap { font-size: 12px; color: var(--an-ink2); text-align: center; }
+    .an-d0 { background: var(--an-lo3); } .an-d1 { background: var(--an-lo2); } .an-d2 { background: var(--an-lo1); } .an-d3 { background: var(--an-mid); }
+    .an-d4 { background: var(--an-hi1); } .an-d5 { background: var(--an-hi2); } .an-d6 { background: var(--an-hi3); }
+    .an-blue { background: var(--an-s1); }
+    .an-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--an-ink2); }
+    .an-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .an-legend i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); display: inline-block; }
+    .an-segrow { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 12px; align-items: center; }
+    @media (max-width: 520px) { .an-segrow { grid-template-columns: minmax(0, 1fr); } }
+    .an-segrow .nm { font-size: 13px; font-weight: 600; }
+    .an-segrow .nm small { color: var(--an-ink2); display: block; font-size: 12px; font-weight: 400; }
+    .an-sbar { display: flex; gap: 2px; height: 28px; }
+    .an-sbar > div { height: 28px; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 12px; font-weight: 700; overflow: hidden; white-space: nowrap; min-width: 0; }
+    .an-cAp { background: var(--an-cap); color: var(--an-on-cap); } .an-cA { background: var(--an-ca); color: var(--an-on-ca); }
+    .an-cB { background: var(--an-cb); color: var(--an-on-cb); } .an-cC { background: var(--an-cc); color: var(--an-on-cc); }
+    .an-l0 { background: var(--an-lo3); color: var(--an-on-lo3); } .an-l1 { background: var(--an-lo1); color: var(--an-on-lo1); } .an-l2 { background: var(--an-mid); color: var(--an-on-mid); }
+    .an-l3 { background: var(--an-hi2); color: var(--an-on-hi2); } .an-l4 { background: var(--an-hi3); color: var(--an-on-hi3); }
+    .an-tablewrap { overflow-x: auto; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
+    .an-tablewrap table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    .an-tablewrap th, .an-tablewrap td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--an-grid); font-variant-numeric: tabular-nums; vertical-align: middle; }
+    .an-tablewrap tr:last-child td { border-bottom: 0; }
+    .an-tablewrap th:first-child, .an-tablewrap td:first-child { text-align: left; }
+    .an-tablewrap th { font-weight: 700; color: var(--an-ink2); font-size: 12px; white-space: nowrap; background: var(--gray-50); }
+    .an-tablewrap tbody tr:hover { background: var(--an-hover); }
+    .an-tablewrap .l { text-align: left; }
+    .an-matrix td, .an-matrix th { text-align: center !important; }
+    .an-matrix td:first-child, .an-matrix th:first-child { text-align: left !important; }
+    .an-sortbtn { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; font-weight: 700; font-size: 12px; color: var(--an-ink2); }
+    .an-sortbtn:hover { color: var(--gray-800); }
+    .an-gcell { display: grid; grid-template-columns: 70px auto; gap: 8px; align-items: center; justify-content: end; }
+    .an-gcell .an-meter { margin: 0; }
+    .an-gcell b { font-weight: 500; min-width: 64px; text-align: right; display: inline-block; }
+    .an-linkbtn { all: unset; cursor: pointer; font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; justify-self: start; color: var(--primary); }
+    .an-tag { font-size: 11px; font-weight: 700; border: 1px solid var(--an-axis); border-radius: 4px; padding: 0 5px; color: var(--an-ink2); white-space: nowrap; }
+    .an-cgroup { display: grid; }
+    .an-cgroup > h3 { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--an-ink2); padding: 12px 0 4px; }
+    .an-crit { display: grid; grid-template-columns: 34px minmax(0, 1fr) 96px 52px; gap: 2px 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--an-grid); }
+    .an-crit .code { font-size: 12px; font-weight: 700; color: var(--an-ink2); }
+    .an-crit .nm { font-size: 13px; line-height: 1.35; }
+    .an-crit .nm small { display: block; color: var(--an-ink2); font-size: 11px; }
+    .an-crit .val { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .an-crit .an-meter { margin: 0; height: 8px; border-radius: 4px; }
+    .an-crit .an-meter > i { border-radius: 0 4px 4px 0; }
+    .an-mini { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+    .an-mini div { display: grid; gap: 2px; }
+    .an-mini b { font-size: 22px; line-height: 1.2; font-weight: 800; color: var(--navy); }
+    .an-mini span { font-size: 12px; color: var(--an-ink2); }
+    .an-trend { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .an-trend h3 { margin-bottom: 4px; }
+    .an-svg text { fill: var(--an-ink2); font-size: 11px; font-family: inherit; }
+    .an-svg .gl { stroke: var(--an-grid); stroke-width: 1; }
+    .an-svg .ax { stroke: var(--an-axis); stroke-width: 1; }
+    .an-note { color: var(--an-ink2); font-size: 13px; }
+    .an-foot { color: var(--an-ink2); font-size: 12px; padding: 0 2px 12px; }
+    #an-tip { position: fixed; z-index: 100002; max-width: 280px; padding: 6px 9px; border-radius: 6px; background: var(--navy); color: #fff; font-size: 12px; line-height: 1.4; pointer-events: none; }
+    #an-tip[hidden] { display: none; }
   </style>
 </head>
 <body>
@@ -485,6 +595,22 @@
       <div id="page-hr-detail" class="page">
         <div id="hr-detail-content"><div class="empty-state">👆 Chọn tháng ở Dashboard trước</div></div>
       </div>
+
+      <!-- HR: phân tích -->
+      <div id="page-hr-analytics" class="page">
+        <div class="card" style="padding-bottom:18px;">
+          <div class="an-bar">
+            <div class="form-group" style="margin-bottom:0;">
+              <span class="form-label">📅 Chọn tháng (phiếu từ 10/2026)</span>
+              <div class="month-picker" id="mp-hr-an"></div>
+            </div>
+            <button type="button" class="btn btn-gray" id="an-reload" hidden style="width:auto;padding:0 16px;">↻ Tải lại</button>
+          </div>
+          <div id="an-status" class="status-msg"></div>
+          <div id="an-filters" class="an-filters" hidden></div>
+        </div>
+        <div id="an-content"><div class="empty-state">👆 Chọn tháng để xem phân tích</div></div>
+      </div>
     </div>
 
     <!-- ======================= PHIẾU ĐÁNH GIÁ ======================= -->
@@ -634,7 +760,7 @@
 
     <footer>
       <p><b>PHIẾU TỰ ĐÁNH GIÁ HIỆU QUẢ CÔNG VIỆC TRỰC TUYẾN</b></p>
-      <p>© 2026 Phòng Tổ chức - Nhân sự · <span style="opacity:.6;">phiên bản 2026.10.31b</span></p>
+      <p>© 2026 Phòng Tổ chức - Nhân sự · <span style="opacity:.6;">phiên bản 2026.11.02</span></p>
     </footer>
   </div>
 </div>
@@ -674,6 +800,7 @@ const NAV = {
     { section:'Tổ chức cán bộ' },
     { id:'page-hr-dashboard', icon:'📊', label:'Dashboard' },
     { id:'page-hr-detail',    icon:'📋', label:'Chi tiết đơn vị' },
+    { id:'page-hr-analytics', icon:'📈', label:'Phân tích' },
     { id:'page-mgr-eval',     icon:'👥', label:'Chấm phiếu được giao' },
     { section:'Cá nhân' },
     { id:'page-home',         icon:'📝', label:'Tự đánh giá' },
@@ -689,10 +816,11 @@ const PAGE_LABELS = {
   'page-mgr-table':    { title:'Bảng chấm điểm', sub:'Nhập điểm và xếp loại' },
   'page-mgr-stats':    { title:'Thống kê', sub:'Kết quả theo tháng' },
   'page-hr-dashboard': { title:'Dashboard', sub:'Toàn bộ kết quả' },
-  'page-hr-detail':    { title:'Chi tiết đơn vị', sub:'Danh sách VC-NLĐ theo đơn vị' }
+  'page-hr-detail':    { title:'Chi tiết đơn vị', sub:'Danh sách VC-NLĐ theo đơn vị' },
+  'page-hr-analytics': { title:'Phân tích', sub:'Xếp loại, tiêu chí, tự chấm so với Trưởng đơn vị' }
 };
 
-const APP_VERSION = '2026.10.31b';
+const APP_VERSION = '2026.11.02';
 window.addEventListener('error', ev => showErrBanner(ev.message));
 window.addEventListener('unhandledrejection', ev => showErrBanner(ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason)));
 function showErrBanner(msg) {
@@ -745,7 +873,7 @@ function showError(err) { if (!err || !err.handled) alert('⚠️ ' + (err && er
 // ------------------------------------------------------------
 // Kiểm tra dữ liệu máy chủ trả về + phiên bản Apps Script
 // ------------------------------------------------------------
-const API_REQUIRED = '2026.10.31b';       // Code.gs phải có API_VERSION ≥ số này
+const API_REQUIRED = '2026.11.02';       // Code.gs phải có API_VERSION ≥ số này
 const isUser = u => !!u && typeof u === 'object' && typeof u.hoTen === 'string' && typeof u.role === 'string';
 const SHAPE = {
   login:      d => !!d && (d.multiUnit ? Array.isArray(d.donViList) : d.otpRequired ? !!d.otpId : (!!d.token && isUser(d.user))),
@@ -759,6 +887,7 @@ const SHAPE = {
   getAllStaffData: Array.isArray,
   updateManagerEvaluations: d => !!d && typeof d.saved === 'number',
   getExportTCCB: d => !!d && Array.isArray(d.rows),
+  getAnalytics:  d => !!d && Array.isArray(d.rows) && Array.isArray(d.roster) && Array.isArray(d.missing),
   exportReport:  d => !!d && !!d.sheetName,
   exportCSVData: d => !!d && !!d.base64,
   exportExcelData: d => !!d && !!d.base64
@@ -973,6 +1102,7 @@ function showPage(pageId) {
   document.getElementById('topbar-title').textContent = l.title;
   document.getElementById('topbar-subtitle').textContent = l.sub;
   if (pageId === 'page-success') loadHistory();
+  if (pageId === 'page-hr-analytics' && window.anShow) window.anShow();
 }
 
 function showFormPage(formId) {
@@ -2596,6 +2726,601 @@ document.addEventListener('DOMContentLoaded', () => {
     catch (e) { logout(); }
   }
 });
+</script>
+<script>
+/* ============================================================
+   TRANG PHÂN TÍCH (HR) — dữ liệu lấy từ action getAnalytics (Code.gs), thống kê tính ngay trên trình duyệt.
+   Dùng các hàm chung của trang: api, state, setStatus, nextSeq, isLatest, initMonthPicker, monthPickers.
+   ============================================================ */
+(function () {
+  'use strict';
+  var FORM_FROM = '10-2026';   // trùng FORM_V2_FROM trong Code.gs
+
+  var CRIT = [
+    { k: '1.1', max: 2, grp: '1', t: 'Chấp hành đường lối, chính sách, pháp luật' },
+    { k: '1.2', max: 2, grp: '1', t: 'Lập trường chính trị, đạo đức, lối sống' },
+    { k: '1.3', max: 2, grp: '1', t: 'Chuẩn mực đạo đức nghề nghiệp' },
+    { k: '1.4', max: 2, grp: '1', t: 'Chấp hành phân công, kỷ luật, nội quy' },
+    { k: '1.5', max: 2, grp: '1', t: 'Đoàn kết, hợp tác, giữ uy tín' },
+    { k: '2.1.1', max: 1, grp: '2', t: 'Kiến thức chuyên sâu, quy trình nghiệp vụ' },
+    { k: '2.1.2', max: 1, grp: '2', t: 'Chủ động học tập, bồi dưỡng' },
+    { k: '2.1.3', max: 1, grp: '2', t: 'Kỹ năng độc lập, làm việc nhóm, công nghệ thông tin' },
+    { k: '2.2.1', max: 2, grp: '2', t: 'Nhiệm vụ thường xuyên' },
+    { k: '2.2.2', max: 1, grp: '2', t: 'Nhiệm vụ đột xuất' },
+    { k: '2.3.1', max: 1, grp: '2', t: 'Nghiên cứu, đề xuất, tham mưu' },
+    { k: '2.3.2', max: 1, grp: '2', t: 'Cập nhật kiến thức, công nghệ mới' },
+    { k: '2.4.1', max: 1, grp: '2', t: 'Giao tiếp, văn hóa ứng xử' },
+    { k: '2.4.2', max: 1, grp: '2', t: 'Phối hợp, không đùn đẩy trách nhiệm' },
+    { k: '3.1', max: 4, grp: '3', t: 'Sản phẩm, giải pháp đột phá, sáng tạo' },
+    { k: '3.2', max: 3, grp: '3', t: 'Chịu trách nhiệm trước kết quả công việc' },
+    { k: '3.3', max: 3, grp: '3', t: 'Dám nghĩ, dám làm, dám đổi mới', note: 'Mục dành cho viên chức quản lý' },
+    { k: 'II.1', max: 20, grp: 'II', t: 'Số lượng công việc' },
+    { k: 'II.2', max: 20, grp: 'II', t: 'Tiến độ công việc' },
+    { k: 'II.3', max: 30, grp: 'II', t: 'Chất lượng công việc' }
+  ];
+  var GROUPS = {
+    '1': 'Phẩm chất chính trị, đạo đức, kỷ luật · 10 điểm',
+    '2': 'Năng lực chuyên môn, trách nhiệm, thái độ phục vụ · 10 điểm',
+    '3': 'Đổi mới, sáng tạo, dám chịu trách nhiệm · 10 điểm',
+    'II': 'Kết quả thực hiện nhiệm vụ · 70 điểm'
+  };
+  var II_PLAN = [{ hundred: 18, top: 20 }, { hundred: 16, top: 20 }, { hundred: 26, top: 30 }];
+  var RANK = { 'C': 0, 'B': 1, 'A': 2, 'A+': 3 };
+  var TYPE_SHORT = { GV: 'GV, NCV, TG', HC: 'HC, HT, PV' };
+  var CLS_LABEL = { 'A+': 'A+ (từ 90 điểm)', 'A': 'A (70 đến dưới 90)', 'B': 'B (50 đến dưới 70)', 'C': 'C (dưới 50)' };
+  var CLS_CSS = { 'A+': 'an-cAp', 'A': 'an-cA', 'B': 'an-cB', 'C': 'an-cC' };
+  var CLS_VAR = { 'A+': 'var(--an-cap)', 'A': 'var(--an-ca)', 'B': 'var(--an-cb)', 'C': 'var(--an-cc)' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  function E(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(x, d) { d = d == null ? 1 : d; return x == null || isNaN(x) ? '–' : x.toLocaleString('vi-VN', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function sgn(x, d) { d = d == null ? 1 : d; if (x == null || isNaN(x)) return '–'; var a = Math.abs(x).toLocaleString('vi-VN', { minimumFractionDigits: d, maximumFractionDigits: d }); return (x > 0.00001 ? '+' : x < -0.00001 ? '−' : '') + a; }
+  function pct(x, d) { return x == null || isNaN(x) ? '–' : fmt(x * 100, d == null ? 1 : d) + '%'; }
+  function int(x) { return x == null ? '–' : x.toLocaleString('vi-VN'); }
+  function tip(t) { return ' data-antip="' + E(t) + '"'; }
+  function mLabel(k) { return k.replace('-', '/'); }
+  function mKey(k) { var p = k.split('-'); return (+p[1]) * 12 + (+p[0]); }
+  function classOf(t) { return t >= 90 ? 'A+' : t >= 70 ? 'A' : t >= 50 ? 'B' : 'C'; }
+  function typeOf(t) { return t === 'GV' ? 'GV' : 'HC'; }
+  var sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
+  var avg = function (a) { return a.length ? sum(a) / a.length : null; };
+
+  /* ---------- tính thống kê ---------- */
+  function toRow(x, i) {
+    var td = x.td == null ? null : Number(x.td);
+    return {
+      id: i + 1, name: x.n || '', unit: x.u, type: typeOf(x.t),
+      c: x.c.slice(0, 17), ii: x.c.slice(17, 20),
+      kpi: x.kpi, bp: x.bp, tot: x.tot, sc: RANK.hasOwnProperty(x.sc) ? x.sc : classOf(x.tot),
+      br: x.br, td: td, tc: td != null ? (RANK.hasOwnProperty(x.tc) ? x.tc : classOf(td)) : null,
+      gr: x.g || ''
+    };
+  }
+  function dBin(d) { if (d <= -4) return 0; if (d <= -1) return 1; if (d < 0) return 2; if (d === 0) return 3; if (d < 1) return 4; if (d < 4) return 5; return 6; }
+  function iiLevel(j, v) { var p = II_PLAN[j]; if (v <= 0) return 0; if (v < p.hundred) return 1; if (v === p.hundred) return 2; if (v < p.top) return 3; return 4; }
+
+  function compute(rows) {
+    var n = rows.length, m = { n: n };
+    var tots = rows.map(function (r) { return r.tot; });
+    m.meanTot = avg(tots);
+    m.minTot = n ? Math.min.apply(null, tots) : null;
+    m.maxTot = n ? Math.max.apply(null, tots) : null;
+    m.cls = {}; rows.forEach(function (r) { m.cls[r.sc] = (m.cls[r.sc] || 0) + 1; });
+    m.aplus = m.cls['A+'] || 0;
+    m.hist = [0, 0, 0, 0, 0];
+    tots.forEach(function (t) { m.hist[t < 80 ? 0 : t < 85 ? 1 : t < 90 ? 2 : t < 95 ? 3 : 4]++; });
+    var g = rows.filter(function (r) { return r.td != null; });
+    m.gradedN = g.length; m.pendingN = n - g.length;
+    m.meanTd = avg(g.map(function (r) { return r.td; }));
+    var d = g.map(function (r) { return r.td - r.tot; });
+    m.meanDelta = avg(d);
+    m.equal = d.filter(function (x) { return x === 0; }).length;
+    m.lower = d.filter(function (x) { return x < 0; }).length;
+    m.higher = d.filter(function (x) { return x > 0; }).length;
+    m.dBins = [0, 0, 0, 0, 0, 0, 0]; d.forEach(function (x) { m.dBins[dBin(x)]++; });
+    m.matrix = {}; g.forEach(function (r) { var k = r.sc + '>' + r.tc; m.matrix[k] = (m.matrix[k] || 0) + 1; });
+    m.down = g.filter(function (r) { return RANK[r.tc] < RANK[r.sc]; }).length;
+    m.up = g.filter(function (r) { return RANK[r.tc] > RANK[r.sc]; }).length;
+    m.apToA = g.filter(function (r) { return r.sc === 'A+' && r.tc === 'A'; }).length;
+    m.aToAp = g.filter(function (r) { return r.sc === 'A' && r.tc === 'A+'; }).length;
+
+    var U = {}, order = [];
+    rows.forEach(function (r) { if (!U[r.unit]) { U[r.unit] = []; order.push(r.unit); } U[r.unit].push(r); });
+    m.unitCount = order.length;
+    m.units = order.map(function (u) {
+      var rs = U[u], gg = rs.filter(function (r) { return r.td != null; });
+      return {
+        unit: u, n: rs.length, mean: avg(rs.map(function (r) { return r.tot; })),
+        aplus: rs.filter(function (r) { return r.sc === 'A+'; }).length,
+        gradedN: gg.length, gshare: gg.length / rs.length,
+        td: avg(gg.map(function (r) { return r.td; })),
+        delta: gg.length ? avg(gg.map(function (r) { return r.td - r.tot; })) : null
+      };
+    });
+    m.zeroUnits = m.units.filter(function (u) { return u.gradedN === 0; }).map(function (u) { return u.unit; });
+
+    var T = {}, tOrder = [];
+    rows.forEach(function (r) { if (!T[r.type]) { T[r.type] = []; tOrder.push(r.type); } T[r.type].push(r); });
+    m.types = tOrder.map(function (t) {
+      var rs = T[t], cc = {}; rs.forEach(function (r) { cc[r.sc] = (cc[r.sc] || 0) + 1; });
+      return { type: t, n: rs.length, cls: cc };
+    });
+
+    m.crit = CRIT.map(function (cr, idx) {
+      var vals = rows.map(function (r) { return idx < 17 ? r.c[idx] : r.ii[idx - 17]; });
+      return {
+        k: cr.k, max: cr.max, grp: cr.grp, t: cr.t, note: cr.note || '',
+        mean: avg(vals), share: n ? avg(vals) / cr.max : null,
+        atMax: n ? vals.filter(function (v) { return v >= cr.max; }).length / n : null,
+        zero: n ? vals.filter(function (v) { return v === 0; }).length / n : null
+      };
+    });
+    m.ii = [0, 1, 2].map(function (j) {
+      var cnt = [0, 0, 0, 0, 0]; rows.forEach(function (r) { cnt[iiLevel(j, r.ii[j])]++; });
+      return cnt;
+    });
+    m.allHundred = rows.filter(function (r) { return r.ii[0] === 18 && r.ii[1] === 16 && r.ii[2] === 26; }).length;
+
+    var G = {}, gOrder = [];
+    g.forEach(function (r) { var k = r.gr || ''; if (!G[k]) { G[k] = []; gOrder.push(k); } G[k].push(r); });
+    m.graders = gOrder.map(function (k) {
+      var rs = G[k], dd = rs.map(function (r) { return r.td - r.tot; });
+      return { id: k, n: rs.length, delta: avg(dd), lower: dd.filter(function (x) { return x < 0; }).length, higher: dd.filter(function (x) { return x > 0; }).length };
+    }).sort(function (a, b) { return b.n - a.n; });
+    m.bigDiff = g.map(function (r) { return { r: r, d: r.td - r.tot }; })
+      .filter(function (x) { return Math.abs(x.d) >= 4; })
+      .sort(function (a, b) { return Math.abs(b.d) - Math.abs(a.d); });
+
+    var prop = rows.filter(function (r) { return r.bp > 0; }), propG = prop.filter(function (r) { return r.td != null; });
+    m.bonus = {
+      n: prop.length, share: n ? prop.length / n : 0, meanBp: avg(prop.map(function (r) { return r.bp; })),
+      gradedN: propG.length, sumBp: sum(propG.map(function (r) { return r.bp; })),
+      sumBr: sum(propG.map(function (r) { return r.br == null ? r.bp : r.br; })),
+      full: propG.filter(function (r) { return (r.br == null ? r.bp : r.br) >= r.bp; }).length,
+      cut: propG.filter(function (r) { return (r.br == null ? r.bp : r.br) < r.bp; }).length
+    };
+    return m;
+  }
+
+  /* ---------- trạng thái ---------- */
+  var S = {
+    token: null, month: '', raw: null, rows: [], cache: {},
+    type: 'all', unit: 'all', status: 'all',
+    sort: { key: 'mean', dir: -1 }, critSort: 'form',
+    showAllDiff: false, showAllMiss: false, trendOn: false, trendBusy: false, trendErr: '', focus: null
+  };
+  function resetAll() {
+    S.month = ''; S.raw = null; S.rows = []; S.cache = {}; S.type = 'all'; S.unit = 'all'; S.status = 'all';
+    S.showAllDiff = false; S.showAllMiss = false; S.trendOn = false; S.trendBusy = false; S.trendErr = '';
+    $('an-filters').hidden = true; $('an-filters').innerHTML = ''; $('an-reload').hidden = true;
+    $('an-content').innerHTML = '<div class="empty-state">👆 Chọn tháng để xem phân tích</div>';
+    setStatus($('an-status'), '', '');
+  }
+  function filterRows(rows, ignoreStatus) {
+    return rows.filter(function (r) {
+      if (S.type !== 'all' && r.type !== S.type) return false;
+      if (S.unit !== 'all' && r.unit !== S.unit) return false;
+      if (!ignoreStatus) {
+        if (S.status === 'graded' && r.td == null) return false;
+        if (S.status === 'pending' && r.td != null) return false;
+      }
+      return true;
+    });
+  }
+  function passRoster(o) { return (S.type === 'all' || typeOf(o.t) === S.type) && (S.unit === 'all' || o.u === S.unit); }
+
+  /* ---------- các khối giao diện ---------- */
+  function roster() {
+    var ro = S.raw.roster.filter(passRoster), t = 0, d = 0;
+    ro.forEach(function (o) { t += o.total; d += o.done; });
+    return { list: ro, total: t, done: d };
+  }
+
+  function kpi(m, rs) {
+    var gs = m.n ? m.gradedN / m.n : 0, first;
+    if (rs.total) {
+      var rate = rs.done / rs.total;
+      first = ['Đã nộp phiếu', pct(rate, 0), rs.done + ' / ' + rs.total + ' vị trí theo danh sách nhân sự', '<div class="an-meter" role="img" aria-label="' + pct(rate, 0) + ' vị trí đã nộp"><i style="width:' + (rate * 100) + '%"></i></div>'];
+    } else first = ['Số phiếu', int(m.n), m.unitCount + ' đơn vị', ''];
+    var tiles = [
+      first,
+      ['Điểm tự chấm trung bình', fmt(m.meanTot), m.n + ' phiếu · thấp nhất ' + fmt(m.minTot) + ' · cao nhất ' + fmt(m.maxTot), ''],
+      ['Xếp loại A+', int(m.aplus), pct(m.n ? m.aplus / m.n : 0) + ' số phiếu đã nộp', ''],
+      ['Đã được Trưởng đơn vị chấm', pct(gs, 0), m.gradedN + ' / ' + m.n + ' phiếu', '<div class="an-meter" role="img" aria-label="' + pct(gs, 0) + ' phiếu đã chấm"><i style="width:' + (gs * 100) + '%"></i></div>'],
+      ['Điểm Trưởng đơn vị trung bình', fmt(m.meanTd), 'Trên ' + m.gradedN + ' phiếu đã chấm', ''],
+      ['Chênh lệch TĐV trừ tự chấm', sgn(m.meanDelta, 2), m.gradedN ? pct(m.equal / m.gradedN, 0) + ' phiếu chấm bằng nhau' : 'Chưa có phiếu đã chấm', '']
+    ];
+    return '<div class="an-tiles">' + tiles.map(function (t) {
+      return '<div class="an-tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + E(t[2]) + '</span>' + t[3] + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function list(arr, max) { return arr.length <= max ? arr.join('; ') : arr.slice(0, max).join('; ') + ' và ' + (arr.length - max) + ' đơn vị khác'; }
+
+  function insights(m, rs) {
+    var out = [];
+    function add(kind, text) { out.push([kind, text]); }
+    var miss = S.raw.missing.filter(passRoster);
+    if (rs.total && miss.length) {
+      var mu = {}; miss.forEach(function (x) { mu[x.u] = (mu[x.u] || 0) + 1; });
+      var top = Object.keys(mu).sort(function (a, b) { return mu[b] - mu[a]; }).map(function (u) { return u + ' (' + mu[u] + ')'; });
+      add('act', miss.length + ' vị trí (' + pct(miss.length / rs.total, 0) + ' danh sách nhân sự) chưa nộp phiếu, thuộc ' + top.length + ' đơn vị. Nhiều nhất: ' + list(top, 4) + '.');
+    } else if (rs.total) add('ok', 'Tất cả ' + rs.total + ' vị trí trong danh sách nhân sự đã nộp phiếu.');
+    if (m.pendingN > 0) {
+      var t = m.pendingN + ' phiếu (' + pct(m.pendingN / m.n, 0) + ') chưa được Trưởng đơn vị chấm.';
+      if (m.zeroUnits.length) t += ' ' + m.zeroUnits.length + ' đơn vị chưa chấm phiếu nào: ' + list(m.zeroUnits, 6) + '.';
+      add('act', t);
+    } else if (m.n) add('ok', 'Tất cả ' + m.n + ' phiếu đã được Trưởng đơn vị chấm.');
+    var items = m.crit.slice(0, 17);
+    var sat = items.filter(function (c) { return c.atMax >= 0.9; });
+    var disc = m.crit.filter(function (c) { return c.grp !== 'II' && c.zero >= 0.1; });
+    if (sat.length) {
+      var tx = sat.length + ' trong 17 tiêu chí con có từ 90% phiếu chấm điểm tối đa, nên khó phân biệt người làm tốt với người làm chưa tốt.';
+      if (disc.length) tx += ' Điểm phân hóa nằm ở ' + disc.map(function (c) { return c.k + ' (' + pct(c.zero, 0) + ' phiếu 0 điểm)'; }).join(', ') + ' và Phần II.';
+      add('note', tx);
+    }
+    if (m.n && m.allHundred > 0) add('note', pct(m.allHundred / m.n, 0) + ' phiếu (' + m.allHundred + ') tự chấm đúng mức "hoàn thành 100%" ở cả ba mục II.1, II.2, II.3. ' + pct((m.ii[0][3] + m.ii[0][4]) / m.n, 0) + ' phiếu báo vượt kế hoạch về số lượng (II.1).');
+    if (m.gradedN) {
+      add('info', 'Trong ' + m.gradedN + ' phiếu đã chấm: ' + m.equal + ' phiếu bằng nhau, ' + m.lower + ' phiếu TĐV chấm thấp hơn, ' + m.higher + ' phiếu cao hơn. Chênh lệch trung bình ' + sgn(m.meanDelta, 2) + ' điểm.');
+      if (m.up || m.down) add('note', 'TĐV đổi xếp loại ở ' + (m.up + m.down) + ' phiếu: hạ ' + m.apToA + ' phiếu từ A+ xuống A, nâng ' + m.aToAp + ' phiếu từ A lên A+.');
+      if (m.bigDiff.length) add('act', m.bigDiff.length + ' phiếu chênh từ 4 điểm trở lên giữa tự chấm và TĐV. Danh sách ở mục "Phiếu chênh lệch lớn".');
+    }
+    var bc = (m.cls['B'] || 0) + (m.cls['C'] || 0);
+    if (m.n && !bc) add('info', 'Không có phiếu xếp loại B hoặc C. Điểm tự chấm thấp nhất là ' + fmt(m.minTot) + '.');
+    else if (bc) add('note', bc + ' phiếu tự xếp loại B hoặc C.');
+    var K = { act: ['Cần xử lý', 'var(--an-serious)'], note: ['Lưu ý', 'var(--an-warn)'], info: ['Thông tin', 'var(--an-info)'], ok: ['Tốt', 'var(--an-good)'] };
+    return '<section class="an-panel" aria-labelledby="an-h-ins"><h2 id="an-h-ins">Điểm cần chú ý</h2><ul class="an-ins">' + out.map(function (o) {
+      var k = K[o[0]];
+      return '<li><span class="an-pill" style="--c:' + k[1] + '"><i></i>' + k[0] + '</span><span>' + E(o[1]) + '</span></li>';
+    }).join('') + '</ul></section>';
+  }
+
+  function submission(rs) {
+    if (!rs.total) return '';
+    var U = {};
+    rs.list.forEach(function (o) { var u = U[o.u] || (U[o.u] = { unit: o.u, total: 0, done: 0 }); u.total += o.total; u.done += o.done; });
+    var arr = Object.keys(U).map(function (k) { return U[k]; }).sort(function (a, b) { return (a.done / a.total) - (b.done / b.total) || a.unit.localeCompare(b.unit, 'vi'); });
+    var rows = arr.map(function (u) {
+      var r = u.done / u.total, left = u.total - u.done;
+      return '<tr><td>' + E(u.unit) + '</td><td>' + u.total + '</td><td><div class="an-gcell"><div class="an-meter" role="img" aria-label="' + pct(r, 0) + '"><i style="width:' + (r * 100) + '%"></i></div><b>' + u.done + '/' + u.total + '</b></div></td><td>' + pct(r, 0) + '</td><td>' + (left ? '<b>' + left + '</b>' : '–') + '</td></tr>';
+    }).join('');
+    var miss = S.raw.missing.filter(passRoster).slice().sort(function (a, b) { return a.u.localeCompare(b.u, 'vi') || a.n.localeCompare(b.n, 'vi'); });
+    var shown = S.showAllMiss ? miss : miss.slice(0, 12);
+    var missHtml = miss.length
+      ? '<h3>Chưa nộp phiếu (' + miss.length + ')</h3><div class="an-tablewrap"><table style="min-width:520px"><thead><tr><th scope="col">Họ và tên</th><th scope="col" class="l">Đơn vị</th><th scope="col" class="l">Loại phiếu</th></tr></thead><tbody>' +
+        shown.map(function (x) { return '<tr><td>' + E(x.n) + '</td><td class="l">' + E(x.u) + '</td><td class="l">' + E(TYPE_SHORT[typeOf(x.t)]) + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+        (miss.length > 12 ? '<button type="button" class="an-linkbtn" id="an-more-miss">' + (S.showAllMiss ? 'Chỉ hiện 12 người đầu' : 'Xem tất cả ' + miss.length + ' người') + '</button>' : '')
+      : '';
+    return '<section class="an-panel" aria-labelledby="an-h-sub"><h2 id="an-h-sub">Tỷ lệ nộp phiếu theo đơn vị</h2><p class="an-sub">Đối chiếu danh sách nhân sự (sheet DanhSachNhanSu) với phiếu đã nộp trong tháng. Mỗi vị trí đánh giá là một dòng (người, đơn vị, loại phiếu). Sắp từ tỷ lệ thấp đến cao.</p>' +
+      '<div class="an-tablewrap"><table style="min-width:560px"><thead><tr><th scope="col">Đơn vị</th><th scope="col">Danh sách</th><th scope="col">Đã nộp</th><th scope="col">Tỷ lệ</th><th scope="col">Chưa nộp</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + missHtml + '</section>';
+  }
+
+  function segLabel(sh) { return sh >= 0.05 ? '<span>' + pct(sh, 0) + '</span>' : ''; }
+
+  function dist(m) {
+    var labels = ['Dưới 80', '80 đến dưới 85', '85 đến dưới 90', '90 đến dưới 95', '95 đến 100'];
+    var mx = Math.max.apply(null, m.hist.concat([1]));
+    var cols = m.hist.map(function (v, i) {
+      return '<div class="an-hcol"' + tip(labels[i] + ' điểm: ' + v + ' phiếu (' + pct(m.n ? v / m.n : 0) + ')') + '><span class="an-hval">' + v + '</span><div class="an-hbar an-blue" style="height:calc((100% - 22px) * ' + (v / mx) + ')"></div></div>';
+    }).join('');
+    var order = ['A+', 'A', 'B', 'C'].filter(function (c) { return m.cls[c]; });
+    function segRow(name, sub, cnt, total) {
+      var segs = order.filter(function (c) { return cnt[c]; }).map(function (c) {
+        var sh = cnt[c] / total;
+        return '<div class="' + CLS_CSS[c] + '" style="flex:' + cnt[c] + ' 1 0"' + tip('Xếp ' + c + ': ' + cnt[c] + ' phiếu (' + pct(sh) + ')') + '>' + segLabel(sh) + '</div>';
+      }).join('');
+      return '<div class="an-segrow"><div class="nm">' + name + '<small>' + sub + '</small></div><div class="an-sbar" role="img" aria-label="' + E(name) + ': ' + order.map(function (c) { return c + ' ' + (cnt[c] || 0); }).join(', ') + '">' + segs + '</div></div>';
+    }
+    var rowsHtml = segRow('Tất cả phiếu', m.n + ' phiếu', m.cls, m.n || 1) + m.types.map(function (t) {
+      return segRow(E(TYPE_SHORT[t.type] || t.type), t.n + ' phiếu', t.cls, t.n);
+    }).join('');
+    var legend = order.map(function (c) { return '<span><i style="--c:' + CLS_VAR[c] + '"></i>' + CLS_LABEL[c] + '</span>'; }).join('');
+    return '<div class="an-grid2">' +
+      '<section class="an-panel" aria-labelledby="an-h-hist"><h2 id="an-h-hist">Phân bố tổng điểm tự chấm</h2><p class="an-sub">Số phiếu theo khoảng điểm, đã gồm điểm thưởng.</p>' +
+      '<div class="an-hist" style="--cols:5">' + cols + '</div><div class="an-hlab" style="--cols:5">' + labels.map(function (l) { return '<span>' + l + '</span>'; }).join('') + '</div>' +
+      '<div class="an-bracket" style="--cols:5;--from:4;--span:2"><span>Xếp loại A+ từ 90 điểm</span></div></section>' +
+      '<section class="an-panel" aria-labelledby="an-h-cls"><h2 id="an-h-cls">Xếp loại theo loại phiếu</h2><p class="an-sub">Tỷ lệ phiếu theo xếp loại tự chấm.</p>' +
+      '<div class="an-legend">' + legend + '</div>' + rowsHtml + '</section></div>';
+  }
+
+  function units(m) {
+    var cols = [['unit', 'Đơn vị'], ['n', 'Phiếu'], ['mean', 'Điểm TB'], ['aplus', 'Xếp A+'], ['gshare', 'Đã chấm TĐV'], ['td', 'Điểm TĐV'], ['delta', 'TĐV trừ tự chấm']];
+    var k = S.sort.key, dir = S.sort.dir;
+    var arr = m.units.slice().sort(function (a, b) {
+      var x = a[k], y = b[k];
+      if (k === 'unit') return dir * String(x).localeCompare(String(y), 'vi');
+      if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+      return dir * (x - y);
+    });
+    var head = cols.map(function (c) {
+      var on = c[0] === k, aria = on ? (dir > 0 ? 'ascending' : 'descending') : 'none';
+      return '<th scope="col" aria-sort="' + aria + '"><button class="an-sortbtn" type="button" data-sort="' + c[0] + '" id="an-sort-' + c[0] + '">' + c[1] + (on ? (dir > 0 ? ' ▲' : ' ▼') : '') + '</button></th>';
+    }).join('');
+    var body = arr.map(function (u) {
+      var g = u.gradedN === 0
+        ? '<span class="an-pill" style="--c:var(--an-serious)"><i></i>Chưa chấm</span>'
+        : '<div class="an-gcell"><div class="an-meter" role="img" aria-label="' + pct(u.gshare, 0) + '"><i style="width:' + (u.gshare * 100) + '%"></i></div><b>' + u.gradedN + '/' + u.n + '</b></div>';
+      return '<tr><td style="min-width:200px;white-space:normal">' + E(u.unit) + '</td><td>' + u.n + '</td><td>' + fmt(u.mean) + '</td><td>' + u.aplus + ' <span style="color:var(--an-ink2)">(' + pct(u.aplus / u.n, 0) + ')</span></td><td>' + g + '</td><td>' + fmt(u.td) + '</td><td>' + sgn(u.delta, 1) + '</td></tr>';
+    }).join('');
+    return '<section class="an-panel" aria-labelledby="an-h-un"><h2 id="an-h-un">Kết quả theo đơn vị</h2><p class="an-sub">Bấm tiêu đề cột để sắp xếp. Chênh lệch tính trên các phiếu đã được TĐV chấm.</p>' +
+      '<div class="an-tablewrap"><table style="min-width:760px"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div></section>';
+  }
+
+  function critRow(c) {
+    var isII = c.grp === 'II', meanShare = c.share || 0;
+    var flag = !isII && (c.zero >= 0.1 || c.atMax < 0.7);
+    var tt = c.k + ' ' + c.t + ': trung bình ' + fmt(c.mean, 2) + '/' + c.max + '. ' + (isII ? 'Chọn mức cao nhất (vượt từ 16%) ở ' : 'Đạt tối đa ') + pct(c.atMax) + ' phiếu, 0 điểm ' + pct(c.zero) + '.';
+    var sub = (isII ? 'Mức cao nhất ' : 'Tối đa ') + pct(c.atMax, 0) + (c.zero > 0 ? ' · 0 điểm ' + pct(c.zero, 0) : '') + (c.note ? ' · ' + c.note : '');
+    return '<div class="an-crit"' + tip(tt) + '><span class="code">' + c.k + '</span><span class="nm">' + E(c.t) + (flag ? ' <span class="an-tag">Phân hóa</span>' : '') + '<small>' + E(sub) + '</small></span>' +
+      '<div class="an-meter" role="img" aria-label="' + pct(meanShare) + ' điểm tối đa"><i style="width:' + (meanShare * 100) + '%"></i></div><span class="val">' + pct(meanShare, 1) + '</span></div>';
+  }
+
+  function criteria(m) {
+    var body;
+    if (S.critSort === 'low') {
+      body = '<div class="an-cgroup">' + m.crit.slice().sort(function (a, b) { return a.share - b.share; }).map(critRow).join('') + '</div>';
+    } else {
+      var seen = {}, html = '';
+      m.crit.forEach(function (c) {
+        if (!seen[c.grp]) { seen[c.grp] = 1; html += (html ? '</div>' : '') + '<div class="an-cgroup"><h3>' + (c.grp === 'II' ? 'Phần II · ' : 'Mục ' + c.grp + ' · ') + GROUPS[c.grp] + '</h3>'; }
+        html += critRow(c);
+      });
+      body = html + '</div>';
+    }
+    var seg = '<div class="an-seg" role="group" aria-label="Sắp xếp tiêu chí" style="justify-self:start">' +
+      '<button type="button" data-crit="form" aria-pressed="' + (S.critSort === 'form') + '">Theo mẫu phiếu</button>' +
+      '<button type="button" data-crit="low" aria-pressed="' + (S.critSort === 'low') + '">Thấp đến cao</button></div>';
+    return '<section class="an-panel" aria-labelledby="an-h-cr"><h2 id="an-h-cr">Mức đạt từng tiêu chí</h2><p class="an-sub">Điểm trung bình so với điểm tối đa của tiêu chí. Nhãn "Phân hóa" đánh dấu tiêu chí có từ 10% phiếu 0 điểm hoặc dưới 70% phiếu đạt tối đa.</p>' + seg + body + '</section>';
+  }
+
+  function planLevels(m) {
+    var names = ['Dưới 80% kế hoạch', '80% đến dưới 100%', 'Đúng 100%', 'Vượt 1 đến 15%', 'Vượt từ 16%'];
+    var lab = ['Số lượng (II.1)', 'Tiến độ (II.2)', 'Chất lượng (II.3)'];
+    var rows = m.ii.map(function (cnt, j) {
+      var segs = cnt.map(function (v, i) {
+        if (!v) return '';
+        var sh = v / (m.n || 1);
+        return '<div class="an-l' + i + '" style="flex:' + v + ' 1 0"' + tip(lab[j] + ' · ' + names[i] + ': ' + v + ' phiếu (' + pct(sh) + ')') + '>' + segLabel(sh) + '</div>';
+      }).join('');
+      return '<div class="an-segrow"><div class="nm">' + lab[j] + '</div><div class="an-sbar" role="img" aria-label="' + lab[j] + ': ' + cnt.map(function (v, i) { return names[i] + ' ' + v; }).join(', ') + '">' + segs + '</div></div>';
+    }).join('');
+    var lg = ['var(--an-lo3)', 'var(--an-lo1)', 'var(--an-mid)', 'var(--an-hi2)', 'var(--an-hi3)'];
+    return '<section class="an-panel" aria-labelledby="an-h-pl"><h2 id="an-h-pl">Mức hoàn thành kế hoạch (Phần II)</h2><p class="an-sub">Mỗi phiếu tự chọn một mức hoàn thành cho số lượng, tiến độ, chất lượng công việc.</p>' +
+      '<div class="an-legend">' + names.map(function (n, i) { return '<span><i style="--c:' + lg[i] + '"></i>' + n + '</span>'; }).join('') + '</div>' + rows + '</section>';
+  }
+
+  function bonus(m) {
+    var b = m.bonus;
+    var t = '<div class="an-mini"><div><b>' + b.n + '</b><span>phiếu đề xuất thưởng (' + pct(b.share) + ')</span></div>' +
+      '<div><b>' + fmt(b.meanBp) + '</b><span>điểm thưởng đề xuất trung bình</span></div>' +
+      '<div><b>' + b.gradedN + '/' + b.n + '</b><span>phiếu thưởng đã được TĐV chấm</span></div></div>';
+    var tail = b.gradedN ? '<p>Trong ' + b.gradedN + ' phiếu đã chấm, đề xuất tổng cộng <b>' + fmt(b.sumBp) + '</b> điểm, TĐV công nhận <b>' + fmt(b.sumBr) + '</b> điểm. ' + b.full + ' phiếu được công nhận đủ, ' + b.cut + ' phiếu bị giảm.</p>' : '<p class="an-note">Chưa có phiếu thưởng nào được TĐV chấm.</p>';
+    return '<section class="an-panel" aria-labelledby="an-h-bo"><h2 id="an-h-bo">Điểm thưởng</h2>' + (b.n ? t + tail : '<p class="an-note">Không có phiếu nào đề xuất điểm thưởng.</p>') + '</section>';
+  }
+
+  function compare(m) {
+    if (!m.gradedN) return '<section class="an-panel"><h2>Tự chấm so với Trưởng đơn vị</h2><p class="an-note">Không có phiếu đã được TĐV chấm trong bộ lọc này.</p></section>';
+    var labs = ['−4 trở xuống', '−1 đến −3,5', '−0,5', '0', '+0,5', '+1 đến +3,5', '+4 trở lên'];
+    var tl = ['TĐV thấp hơn từ 4 điểm', 'TĐV thấp hơn 1 đến 3,5 điểm', 'TĐV thấp hơn 0,5 điểm', 'Hai bên bằng nhau', 'TĐV cao hơn 0,5 điểm', 'TĐV cao hơn 1 đến 3,5 điểm', 'TĐV cao hơn từ 4 điểm'];
+    var mx = Math.max.apply(null, m.dBins.concat([1]));
+    var cols = m.dBins.map(function (v, i) {
+      return '<div class="an-hcol"' + tip(tl[i] + ': ' + v + ' phiếu (' + pct(v / m.gradedN) + ')') + '><span class="an-hval">' + v + '</span><div class="an-hbar an-d' + i + '" style="height:calc((100% - 22px) * ' + (v / mx) + ')"></div></div>';
+    }).join('');
+    var hist = '<section class="an-panel" aria-labelledby="an-h-dl"><h2 id="an-h-dl">Tự chấm so với Trưởng đơn vị</h2><p class="an-sub">Số phiếu theo chênh lệch điểm (điểm TĐV trừ điểm tự chấm), trên ' + m.gradedN + ' phiếu đã chấm.</p>' +
+      '<div class="an-mini"><div><b>' + m.equal + '</b><span>bằng nhau (' + pct(m.equal / m.gradedN, 0) + ')</span></div><div><b>' + m.lower + '</b><span>TĐV chấm thấp hơn (' + pct(m.lower / m.gradedN, 0) + ')</span></div><div><b>' + m.higher + '</b><span>TĐV chấm cao hơn (' + pct(m.higher / m.gradedN, 0) + ')</span></div></div>' +
+      '<div class="an-hist" style="--cols:7;height:250px">' + cols + '</div><div class="an-hlab" style="--cols:7">' + labs.map(function (l) { return '<span>' + l + '</span>'; }).join('') + '</div>' +
+      '<div class="an-axcap">Chênh lệch (điểm)</div></section>';
+    var mat = function (a, b) { return m.matrix[a + '>' + b] || 0; };
+    var matrix = '<section class="an-panel" aria-labelledby="an-h-mx"><h2 id="an-h-mx">Đổi xếp loại sau khi TĐV chấm</h2><p class="an-sub">Hàng là xếp loại tự chấm, cột là xếp loại của TĐV.</p>' +
+      '<div class="an-tablewrap"><table class="an-matrix"><thead><tr><th scope="col"></th><th scope="col">TĐV xếp A+</th><th scope="col">TĐV xếp A</th><th scope="col">TĐV xếp B hoặc C</th></tr></thead><tbody>' +
+      '<tr><th scope="row">Tự chấm A+</th><td>' + mat('A+', 'A+') + '</td><td>' + mat('A+', 'A') + '</td><td>' + (mat('A+', 'B') + mat('A+', 'C')) + '</td></tr>' +
+      '<tr><th scope="row">Tự chấm A</th><td>' + mat('A', 'A+') + '</td><td>' + mat('A', 'A') + '</td><td>' + (mat('A', 'B') + mat('A', 'C')) + '</td></tr></tbody></table></div>' +
+      '<h3>Theo người chấm</h3>' +
+      '<div class="an-tablewrap"><table style="min-width:420px"><thead><tr><th scope="col">Người chấm</th><th scope="col">Phiếu</th><th scope="col">TB chênh lệch</th><th scope="col">Hạ điểm</th><th scope="col">Nâng điểm</th></tr></thead><tbody>' +
+      m.graders.map(function (g) {
+        return '<tr><td>' + (g.id ? E(g.id) : 'Trưởng đơn vị (mặc định)') + '</td><td>' + g.n + '</td><td>' + sgn(g.delta, 2) + '</td><td>' + g.lower + '</td><td>' + g.higher + '</td></tr>';
+      }).join('') + '</tbody></table></div></section>';
+    return '<div class="an-grid32">' + hist + '<div class="an-stack">' + matrix + '</div></div>';
+  }
+
+  function bigdiff(m) {
+    if (!m.gradedN) return '';
+    var all = m.bigDiff, shown = S.showAllDiff ? all : all.slice(0, 10);
+    var body = shown.map(function (x) {
+      var r = x.r;
+      return '<tr><td>' + E(r.name) + '</td><td class="l">' + E(r.unit) + '</td><td class="l">' + E(TYPE_SHORT[r.type] || r.type) + '</td><td>' + fmt(r.tot) + '</td><td>' + fmt(r.td) + '</td><td><b>' + sgn(x.d, 1) + '</b></td><td>' + E(r.sc + ' → ' + r.tc) + '</td></tr>';
+    }).join('');
+    var more = all.length > 10 ? '<button type="button" class="an-linkbtn" id="an-more-diff">' + (S.showAllDiff ? 'Chỉ hiện 10 phiếu đầu' : 'Xem tất cả ' + all.length + ' phiếu') + '</button>' : '';
+    return '<section class="an-panel" aria-labelledby="an-h-bd"><h2 id="an-h-bd">Phiếu chênh lệch lớn</h2><p class="an-sub">Phiếu mà điểm TĐV lệch từ 4 điểm trở lên so với tự chấm, sắp theo độ lệch.</p>' +
+      (all.length ? '<div class="an-tablewrap"><table style="min-width:640px"><thead><tr><th scope="col">Họ và tên</th><th scope="col" class="l">Đơn vị</th><th scope="col" class="l">Loại phiếu</th><th scope="col">Tự chấm</th><th scope="col">TĐV</th><th scope="col">Chênh</th><th scope="col">Xếp loại</th></tr></thead><tbody>' + body + '</tbody></table></div>' + more : '<p class="an-note">Không có phiếu nào lệch từ 4 điểm trở lên.</p>') + '</section>';
+  }
+
+  /* ---------- xu hướng theo tháng ---------- */
+  function niceStep(r) { var p = Math.pow(10, Math.floor(Math.log10(r))), f = r / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+  function lineSVG(labels, series, aria, vf) {
+    var W = 320, H = 150, pl = 38, pr = 34, pt = 12, pb = 24, all = [];
+    series.forEach(function (s) { s.vals.forEach(function (v) { if (v != null) all.push(v); }); });
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    if (lo === hi) { lo -= 1; hi += 1; }
+    var step = niceStep((hi - lo) / 3);
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+    var X = function (i) { return pl + (W - pl - pr) * (labels.length === 1 ? 0.5 : i / (labels.length - 1)); };
+    var Y = function (v) { return pt + (H - pt - pb) * (1 - (v - lo) / (hi - lo)); };
+    var g = '';
+    for (var t = lo; t <= hi + step / 2; t += step) g += '<line class="gl" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(t) + '" y2="' + Y(t) + '"/><text x="' + (pl - 6) + '" y="' + (Y(t) + 4) + '" text-anchor="end">' + vf(t) + '</text>';
+    var xl = labels.map(function (l, i) { return '<text x="' + X(i) + '" y="' + (H - 6) + '" text-anchor="middle">' + E(mLabel(l)) + '</text>'; }).join('');
+    var lines = series.map(function (s) {
+      var pts = s.vals.map(function (v, i) { return v == null ? null : [X(i), Y(v)]; }).filter(Boolean);
+      var last = pts[pts.length - 1], lv = s.vals.filter(function (v) { return v != null; }).pop();
+      var dots = pts.map(function (p, i) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i === pts.length - 1 ? 4 : 3) + '" fill="' + s.color + '" stroke="#fff" stroke-width="2"/>'; }).join('');
+      return '<polyline fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '"/>' + dots + (last ? '<text x="' + (last[0] + 8) + '" y="' + (last[1] + 4) + '">' + vf(lv) + '</text>' : '');
+    }).join('');
+    return '<svg class="an-svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + E(aria) + '" style="max-width:100%;height:auto">' + g + '<line class="ax" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(lo) + '" y2="' + Y(lo) + '"/>' + xl + lines + '</svg>';
+  }
+  function monthsRange() {
+    var out = [], now = new Date(), cy = now.getFullYear(), cm = now.getMonth() + 1, p = FORM_FROM.split('-'), m = +p[0], y = +p[1];
+    while (y < cy || (y === cy && m <= cm)) { out.push((m < 10 ? '0' : '') + m + '-' + y); m++; if (m > 12) { m = 1; y++; } }
+    return out;
+  }
+  function trend() {
+    var head = '<section class="an-panel" aria-labelledby="an-h-tr"><h2 id="an-h-tr">Xu hướng theo tháng</h2>';
+    if (S.trendBusy) return head + '<p class="an-note">⏳ Đang tải dữ liệu các tháng…</p></section>';
+    if (!S.trendOn) {
+      return head + '<p class="an-sub">Tải dữ liệu các tháng từ 10/2026 để so sánh điểm trung bình, tỷ lệ A+ và tỷ lệ phiếu đã được TĐV chấm.</p>' +
+        (S.trendErr ? '<p class="an-note">⚠️ ' + E(S.trendErr) + '</p>' : '') +
+        '<button type="button" class="btn btn-primary" data-act="trend" style="width:auto;padding:0 18px;justify-self:start;">📈 Xem xu hướng các tháng</button></section>';
+    }
+    var ms = monthsRange().filter(function (k) { return S.cache[k]; }).map(function (k) {
+      return { k: k, m: compute(filterRows(S.cache[k].rows.map(toRow), true)) };
+    }).filter(function (x) { return x.m.n > 0; });
+    if (ms.length < 2) return head + '<p class="an-note">Mới có dữ liệu của một tháng, chưa đủ để vẽ xu hướng. Biểu đồ sẽ hiện khi có từ hai tháng.</p></section>';
+    var L = ms.map(function (x) { return x.k; });
+    var c1 = lineSVG(L, [{ color: 'var(--an-s1)', vals: ms.map(function (x) { return x.m.meanTot; }) }, { color: 'var(--an-s2)', vals: ms.map(function (x) { return x.m.meanTd; }) }], 'Điểm trung bình theo tháng', function (v) { return fmt(v, 1); });
+    var c2 = lineSVG(L, [{ color: 'var(--an-s1)', vals: ms.map(function (x) { return 100 * x.m.aplus / x.m.n; }) }], 'Tỷ lệ xếp loại A+ theo tháng', function (v) { return fmt(v, 0) + '%'; });
+    var c3 = lineSVG(L, [{ color: 'var(--an-s1)', vals: ms.map(function (x) { return 100 * x.m.gradedN / x.m.n; }) }], 'Tỷ lệ phiếu đã được TĐV chấm theo tháng', function (v) { return fmt(v, 0) + '%'; });
+    return head + '<p class="an-sub">Áp dụng cùng bộ lọc loại phiếu và đơn vị. Mỗi biểu đồ có thang riêng.</p><div class="an-trend">' +
+      '<div><h3>Điểm trung bình</h3><div class="an-legend" style="margin-bottom:4px"><span><i style="--c:var(--an-s1)"></i>Tự chấm</span><span><i style="--c:var(--an-s2)"></i>Trưởng đơn vị chấm</span></div>' + c1 + '</div>' +
+      '<div><h3>Tỷ lệ xếp loại A+</h3>' + c2 + '</div><div><h3>Tỷ lệ phiếu đã được TĐV chấm</h3>' + c3 + '</div></div></section>';
+  }
+
+  /* ---------- dựng trang ---------- */
+  function buildFilters() {
+    var set = {};
+    S.rows.forEach(function (r) { set[r.unit] = 1; });
+    S.raw.roster.forEach(function (o) { set[o.u] = 1; });
+    var us = Object.keys(set).sort(function (a, b) { return a.localeCompare(b, 'vi'); });
+    if (S.unit !== 'all' && !set[S.unit]) S.unit = 'all';
+    var T = [['all', 'Tất cả'], ['GV', 'GV, NCV, trợ giảng'], ['HC', 'Hành chính, hỗ trợ']];
+    $('an-filters').innerHTML =
+      '<div class="an-fld"><span id="an-lt">Loại phiếu</span><div class="an-seg" role="group" aria-labelledby="an-lt" id="an-ftype">' +
+      T.map(function (t) { return '<button type="button" data-type="' + t[0] + '" aria-pressed="' + (S.type === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="an-fld"><label for="an-funit">Đơn vị</label><select id="an-funit"><option value="all">Tất cả đơn vị</option>' +
+      us.map(function (u) { return '<option value="' + E(u) + '"' + (u === S.unit ? ' selected' : '') + '>' + E(u) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="an-fld"><label for="an-fstatus">Trưởng đơn vị chấm</label><select id="an-fstatus">' +
+      [['all', 'Tất cả phiếu'], ['graded', 'Đã chấm'], ['pending', 'Chưa chấm']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === S.status ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>';
+    $('an-filters').hidden = false;
+  }
+
+  function render() {
+    if (!S.raw) return;
+    var rows = filterRows(S.rows, false), m = compute(rows), rs = roster(), html;
+    if (!rows.length) {
+      html = '<section class="an-panel"><h2>Không có phiếu phù hợp</h2><p class="an-note">Bộ lọc hiện tại không khớp phiếu nào. Đổi loại phiếu, đơn vị hoặc trạng thái chấm.</p></section>' + submission(rs) + trend();
+    } else {
+      html = kpi(m, rs) + insights(m, rs) + submission(rs) + dist(m) + units(m) +
+        '<div class="an-grid32">' + criteria(m) + '<div class="an-stack">' + planLevels(m) + bonus(m) + '</div></div>' +
+        compare(m) + bigdiff(m) + trend() +
+        '<p class="an-foot">Xếp loại theo tổng điểm đã cộng thưởng: A+ từ 90, A từ 70 đến dưới 90, B từ 50 đến dưới 70, C dưới 50. Điểm thưởng tối đa 7. Số liệu lấy từ sheet DuLieuDanhGia_KPI tại thời điểm tải trang.</p>';
+    }
+    $('an-content').innerHTML = html;
+    fitLabels();
+    if (S.focus && $(S.focus)) $(S.focus).focus();
+    S.focus = null;
+  }
+  /* Nhãn không vừa trong khối thì bỏ (giá trị vẫn có ở chú thích khi rê chuột) */
+  function fitLabels() {
+    Array.prototype.forEach.call(document.querySelectorAll('#an-content .an-sbar > div > span'), function (sp) {
+      var p = sp.parentNode;
+      if (p.clientWidth > 0 && sp.offsetWidth + 16 > p.clientWidth) p.removeChild(sp);
+    });
+  }
+
+  /* ---------- tải dữ liệu ---------- */
+  async function load(month) {
+    var status = $('an-status'), box = $('an-content');
+    var n = nextSeq('an');   // vô hiệu hóa yêu cầu đang chạy dở của tháng trước
+    S.month = month; S.showAllDiff = false; S.showAllMiss = false;
+    if (!month) { resetAll(); return; }
+    if (mKey(month) < mKey(FORM_FROM)) {
+      S.raw = null; $('an-filters').hidden = true; $('an-reload').hidden = true;
+      setStatus(status, 'warn', '⚠️ Trang Phân tích chỉ dùng cho phiếu từ tháng ' + mLabel(FORM_FROM) + ' trở đi (mẫu phiếu mới).');
+      box.innerHTML = '';
+      return;
+    }
+    setStatus(status, 'checking', '⏳ Đang tải dữ liệu tháng ' + mLabel(month) + '...');
+    box.innerHTML = '<div class="empty-state">⏳ Đang tải...</div>';
+    try {
+      var d = await api('getAnalytics', { month: month });
+      if (!isLatest('an', n)) return;
+      S.cache[month] = d; S.raw = d; S.rows = d.rows.map(toRow);
+      $('an-reload').hidden = false;
+      if (!S.rows.length && !d.roster.length) {
+        setStatus(status, 'warn', '⚠️ Không có dữ liệu tháng ' + mLabel(month));
+        $('an-filters').hidden = true; box.innerHTML = '';
+        return;
+      }
+      setStatus(status, 'ready', '✅ Tháng ' + mLabel(month) + ' — <b>' + S.rows.length + '</b> phiếu đã nộp');
+      buildFilters();
+      render();
+    } catch (e) {
+      if (!isLatest('an', n)) return;
+      if (e && e.handled) return;
+      setStatus(status, 'warn', '⚠️ ' + E(e && e.message));
+      box.innerHTML = ''; $('an-filters').hidden = true;
+    }
+  }
+  async function loadTrend() {
+    S.trendBusy = true; S.trendErr = ''; render();
+    var ms = monthsRange();
+    for (var i = 0; i < ms.length; i++) {
+      if (S.cache[ms[i]]) continue;
+      try { S.cache[ms[i]] = await api('getAnalytics', { month: ms[i] }); }
+      catch (e) { S.trendErr = (e && e.message) || 'Không tải được dữ liệu các tháng.'; break; }
+    }
+    S.trendBusy = false; S.trendOn = !S.trendErr; render();
+  }
+
+  /* ---------- sự kiện ---------- */
+  function setPicker(id, month) {
+    var box = $(id), p = month.split('-');
+    box.querySelector('.mp-year').value = p[1];
+    if (typeof monthPickers !== 'undefined' && monthPickers[id]) monthPickers[id].refresh();
+    box.querySelector('.mp-month').value = String(Number(p[0]));
+  }
+  window.anShow = function () {
+    if (S.token !== state.token) { resetAll(); S.token = state.token; }       // đổi tài khoản: xóa dữ liệu cũ
+    if (!S.month && state.hrMonth && mKey(state.hrMonth) >= mKey(FORM_FROM)) { setPicker('mp-hr-an', state.hrMonth); load(state.hrMonth); }
+    else fitLabels();
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var tipEl = document.createElement('div');
+    tipEl.id = 'an-tip'; tipEl.hidden = true; tipEl.setAttribute('role', 'tooltip');
+    document.body.appendChild(tipEl);
+    initMonthPicker('mp-hr-an', load);
+
+    var page = $('page-hr-analytics');
+    page.addEventListener('click', function (e) {
+      var t = e.target, b;
+      if ((b = t.closest('[data-type]'))) {
+        S.type = b.getAttribute('data-type');
+        Array.prototype.forEach.call($('an-ftype').querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        S.showAllMiss = false; render(); return;
+      }
+      if ((b = t.closest('[data-sort]'))) { var k = b.getAttribute('data-sort'); S.sort = { key: k, dir: S.sort.key === k ? -S.sort.dir : (k === 'unit' ? 1 : -1) }; S.focus = 'an-sort-' + k; render(); return; }
+      if ((b = t.closest('[data-crit]'))) { S.critSort = b.getAttribute('data-crit'); render(); return; }
+      if ((b = t.closest('[data-act="trend"]'))) { loadTrend(); return; }
+      if (t.id === 'an-more-diff') { S.showAllDiff = !S.showAllDiff; S.focus = 'an-more-diff'; render(); return; }
+      if (t.id === 'an-more-miss') { S.showAllMiss = !S.showAllMiss; S.focus = 'an-more-miss'; render(); return; }
+      if (t.id === 'an-reload') { S.cache = {}; S.trendOn = false; load(S.month); }
+    });
+    page.addEventListener('change', function (e) {
+      if (e.target.id === 'an-funit') { S.unit = e.target.value; S.showAllMiss = false; render(); }
+      else if (e.target.id === 'an-fstatus') { S.status = e.target.value; render(); }
+    });
+
+    function showTip(el, x, y) {
+      tipEl.textContent = el.getAttribute('data-antip'); tipEl.hidden = false;
+      var w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+      tipEl.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, x + 12)) + 'px';
+      tipEl.style.top = Math.max(8, Math.min(window.innerHeight - h - 8, y + 14)) + 'px';
+    }
+    function onPoint(e) { var el = e.target.closest && e.target.closest('[data-antip]'); if (el) showTip(el, e.clientX, e.clientY); else tipEl.hidden = true; }
+    document.addEventListener('pointermove', onPoint);
+    document.addEventListener('pointerdown', onPoint);
+    document.addEventListener('scroll', function () { tipEl.hidden = true; }, true);
+  });
+})();
 </script>
 </body>
 </html>
